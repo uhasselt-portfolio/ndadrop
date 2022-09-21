@@ -1,13 +1,12 @@
 import cookieParser from "cookie-parser";
-import express, { Request, Response } from "express";
-import { config } from "./config";
-import verifyMiddleware from "./middleware/verify.middleware";
-import RoomService from "./services/room.service";
-import CookieUtil from "./utils/cookie.util";
-import FingerprintUtil from "./utils/fingerprint.util";
-import cors from 'cors'
-import http from 'http'
+import cors from 'cors';
+import express from "express";
+import http from 'http';
 import { Server } from "socket.io";
+import { config } from "./config";
+import RoomService from "./services/room.service";
+import FingerprintUtil from "./utils/fingerprint.util";
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 
 const app = express();
 const server = http.createServer(app);
@@ -27,7 +26,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 
-		room.leave({ id });
+		room.leave(id);
 
 		io.to(room.getRoomId()).emit('members', room.getMembers());
 	});
@@ -36,9 +35,16 @@ io.on('connection', (socket) => {
 
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
+        const shortName = uniqueNamesGenerator({
+            dictionaries: [adjectives, animals],
+            separator: " ",
+			style: "capital",
+			length: 2,
+        });
 
 		room.join({
 			id,
+			name: shortName,
 		});
 
 		socket.join(room.getRoomId());

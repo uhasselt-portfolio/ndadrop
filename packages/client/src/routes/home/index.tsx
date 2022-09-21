@@ -43,7 +43,7 @@ const Home = () => {
 		return members.map((member: any) => {
 			return (
 				<li>
-					{member.id}
+					{member}
 				</li>
 			);
 		});
