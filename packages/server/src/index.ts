@@ -1,10 +1,62 @@
-import express from "express";
+import cookieParser from "cookie-parser";
+import express, { Request, Response } from "express";
+import { config } from "./config";
+import verifyMiddleware from "./middleware/verify.middleware";
+import WaitingRoomService from "./services/waiting-room.service";
+import CookieUtil from "./utils/cookie.util";
+import FingerprintUtil from "./utils/fingerprint.util";
 const app = express();
 
-app.get("/", function (req, res) {
-  res.send("Hello World");
+app.use(cookieParser());
+
+// Instances
+const waitingRoom = new WaitingRoomService();
+
+// This API will act like an airdrop alternative
+// Requirement are:
+// - Only people on the same network can communicate
+// - When first connecting, the user will be added to a waiting room
+// - Users on the same network will see each other in the waiting room
+// - When a user is disconnected, the user will be removed from the waiting and chat room
+
+app.get("/", (req: Request, res: Response) => {
+	res.send("Hello World!");
 });
 
-app.listen(3000, () => {
-    console.log("Server listening on port 3000");
+// When a user connects, they will be added to the waiting room
+app.get("/room/join", (req: Request, res: Response) => {
+
+	// 1. Get the user's fingerprint
+	const fingerprint = FingerprintUtil.scan(req);
+
+	// 1. Add the user to the waiting room
+	waitingRoom.addPeer({
+		id: fingerprint
+	});
+
+	CookieUtil.addCookie(res, "auth", fingerprint);
+
+	res.send("You have joined the waiting room!");
+});
+
+// Get the waiting room
+app.get("/room/peers", verifyMiddleware, (req: Request, res: Response) => {
+	res.send(waitingRoom.getWaiting());
+});
+
+app.get("/room/leave", verifyMiddleware, (req: Request, res: Response) => {
+
+	// 1. Get the user's fingerprint
+	const fingerprint = FingerprintUtil.scan(req);
+
+	// 2. Remove the user from the waiting room
+	waitingRoom.removePeer({
+		id: fingerprint
+	});
+
+	res.send("You have left the waiting room!");
+});
+
+app.listen(config.port, () => {
+    console.log(`Server started at http://localhost:${config.port}`);
 });
