@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 type Member = {
     id: string;
     rtc?: any;
@@ -6,9 +8,11 @@ type Member = {
 class RoomService {
 
     private members: Member[];
+    private roomId: string;
 
     constructor() {
         this.members = [];
+        this.roomId = randomUUID();
     }
 
     // Add a peer to the waiting room
@@ -17,16 +21,16 @@ class RoomService {
         // Check if the peer is already in the waiting room
         const isAlreadyInWaitingRoom = this.members.some((p) => p.id === peer.id);
 
-        console.log(`Peer ${peer.id} is already in the waiting room: ${isAlreadyInWaitingRoom}`);
-
-
         if (isAlreadyInWaitingRoom) return;
+
+        console.log("Peer joined the room");
 
         this.members.push(peer);
     }
 
     // Remove a peer from the waiting room
     public leave(peer: Member) {
+        console.log("Peer left the room");
         this.members = this.members.filter((p) => p.id !== peer.id);
     }
 
@@ -35,11 +39,8 @@ class RoomService {
         return this.members;
     }
 
-    public shout(message: string) {
-        // Send message via webRTC data channel to all members in the room
-        for (const member of this.members) {
-            // Send message to member
-        }
+    public getRoomId() {
+        return this.roomId;
     }
 }
 

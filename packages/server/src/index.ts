@@ -6,11 +6,17 @@ import RoomService from "./services/room.service";
 import CookieUtil from "./utils/cookie.util";
 import FingerprintUtil from "./utils/fingerprint.util";
 import cors from 'cors'
+import http from 'http'
+import { Server } from "socket.io";
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(cookieParser());
 app.use(cors());
+
+
 
 // Instances
 const room = new RoomService();
@@ -22,51 +28,44 @@ const room = new RoomService();
 // - Users on the same network will see each other in the waiting room
 // - When a user is disconnected, the user will be removed from the waiting and chat room
 
-app.get("/", (req: Request, res: Response) => {
-	res.send("Hello World!");
-});
+// Show members in room
+// app.get("/room/members", (req: Request, res: Response) => {
 
-// When a user connects, they will be added to the waiting room
-app.post("/room/join", (req: Request, res: Response) => {
+// 	const id = FingerprintUtil.scanHttpRequest(req);
 
-	// 1. Get the user's fingerprint
-	const fingerprint = FingerprintUtil.scan(req);
+// 	const members = room.getMembers();
 
-	// 1. Add the user to the waiting room
-	room.join({
-		id: fingerprint
+// 	// Filter out the id
+// 	const filteredMembers = members.filter((member) => member.id !== id);
+
+// 	res.send(members);
+// });
+
+io.on('connection', (socket) => {
+
+	socket.on('disconnect', () => {
+		const metadata = socket.handshake;
+		const id = FingerprintUtil.scanSocket(metadata);
+
+		room.leave({ id });
+
+		io.to(room.getRoomId()).emit('members', room.getMembers());
 	});
 
-	CookieUtil.addCookie(res, "auth", fingerprint);
+	socket.on('join', (msg) => {
 
-	res.send("You have joined the waiting room!");
-});
+		const metadata = socket.handshake;
+		const id = FingerprintUtil.scanSocket(metadata);
 
-// Get the waiting room
-app.get("/room/peers", verifyMiddleware, (req: Request, res: Response) => {
-	res.send(room.getMembers());
+		room.join({
+			id,
+		});
 
-	// room.chat()
-});
-
-// Send a chat message to everyone in the waiting room
-app.get("/room/chat", verifyMiddleware, (req: Request, res: Response) => {
-
-});
-
-app.get("/room/leave", verifyMiddleware, (req: Request, res: Response) => {
-
-	// 1. Get the user's fingerprint
-	const fingerprint = FingerprintUtil.scan(req);
-
-	// 2. Remove the user from the waiting room
-	room.leave({
-		id: fingerprint
+		socket.join(room.getRoomId());
+		io.to(room.getRoomId()).emit('members', room.getMembers());
 	});
-
-	res.send("You have left the waiting room!");
 });
 
-app.listen(config.port, () => {
+server.listen(config.port, () => {
     console.log(`Server started at http://localhost:${config.port}`);
 });

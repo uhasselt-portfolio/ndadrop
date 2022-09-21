@@ -1,5 +1,6 @@
 import { Request } from "express";
 import crypto from 'crypto';
+import { Handshake } from "socket.io/dist/socket";
 
 // It will be used to identify users on the same network
 class FingerprintUtil {
@@ -12,14 +13,20 @@ class FingerprintUtil {
      * Fingerprint a request
      * @param req The request to fingerprint
      */
-    public static scan(req: Request): string {
+    public static scan(ip?: string | string[], agent?: string): string {
         // Get the user's IP address
-        const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+        return FingerprintUtil.hash(`${ip}${agent}`);
+    }
 
-        // Get the user's user-agent
-        const userAgent = req.headers["user-agent"];
+    public static scanSocket(socket: Handshake): string {
+        return FingerprintUtil.scan(socket.address, socket.headers['user-agent']);
+    }
 
-        return FingerprintUtil.hash(`${ip}${userAgent}`);
+    public static scanHttpRequest(req: Request): string {
+        const ip = req.headers['x-forwarded-for'];
+        const agent = req.headers['user-agent'];
+
+        return FingerprintUtil.scan(ip, agent);
     }
 }
 

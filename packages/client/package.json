@@ -12,7 +12,8 @@
   "dependencies": {
     "preact": "^10.10.0",
     "preact-render-to-string": "^5.2.1",
-    "preact-router": "^3.2.1"
+    "preact-router": "^3.2.1",
+    "socket.io-client": "^4.5.2"
   },
   "devDependencies": {
     "preact-cli": "^3.4.0",

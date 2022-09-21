@@ -1,18 +1,38 @@
 import { h } from 'preact';
-import { useEffect } from 'preact/hooks';
-import API from '../../api';
+import { useEffect, useState } from 'preact/hooks';
+import io from 'socket.io-client';
 
 const Home = () => {
 
+	const [members, setMembers] = useState([]);
+
 	useEffect(() => {
-		console.log("Welcome");
-		API.room().join();
+		const socket = io('http://localhost:3000', {
+			transports: ['websocket'],
+		});
+
+		socket.emit('join');
+
+		socket.on('members', (members) => {
+			console.log("members", members);
+			setMembers(members);
+		});
 	}, []);
+
+	const renderMembers = () => {
+		return members.map((member: any) => {
+			return (
+				<li>
+					{member.id}
+				</li>
+			);
+		});
+	}
 
 	return (
 		<div>
-			<h1>Home</h1>
-			<p>This is the Home component.</p>
+			<h1>List</h1>
+			<p>{renderMembers()}</p>
 		</div>
 	);
 }

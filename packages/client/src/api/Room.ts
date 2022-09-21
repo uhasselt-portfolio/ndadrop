@@ -10,6 +10,15 @@ class Room {
         });
     }
 
+    public async leave() {
+        // Make a http request to /room/leave
+        await fetch('http://localhost:3000/room/leave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+    }
 }
 
 export default Room;
