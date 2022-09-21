@@ -1,6 +1,3 @@
-
-// Express middleware to verify the fingerprint of the client against the cookie
-
 import { NextFunction, Request, Response } from "express";
 import FingerprintUtil from "../utils/fingerprint.util";
 

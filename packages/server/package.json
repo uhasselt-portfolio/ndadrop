@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.12",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "express": "^4.18.1"
   },
   "scripts": {

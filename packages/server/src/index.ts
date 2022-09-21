@@ -2,15 +2,18 @@ import cookieParser from "cookie-parser";
 import express, { Request, Response } from "express";
 import { config } from "./config";
 import verifyMiddleware from "./middleware/verify.middleware";
-import WaitingRoomService from "./services/waiting-room.service";
+import RoomService from "./services/room.service";
 import CookieUtil from "./utils/cookie.util";
 import FingerprintUtil from "./utils/fingerprint.util";
+import cors from 'cors'
+
 const app = express();
 
 app.use(cookieParser());
+app.use(cors());
 
 // Instances
-const waitingRoom = new WaitingRoomService();
+const room = new RoomService();
 
 // This API will act like an airdrop alternative
 // Requirement are:
@@ -24,13 +27,13 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // When a user connects, they will be added to the waiting room
-app.get("/room/join", (req: Request, res: Response) => {
+app.post("/room/join", (req: Request, res: Response) => {
 
 	// 1. Get the user's fingerprint
 	const fingerprint = FingerprintUtil.scan(req);
 
 	// 1. Add the user to the waiting room
-	waitingRoom.addPeer({
+	room.join({
 		id: fingerprint
 	});
 
@@ -41,7 +44,14 @@ app.get("/room/join", (req: Request, res: Response) => {
 
 // Get the waiting room
 app.get("/room/peers", verifyMiddleware, (req: Request, res: Response) => {
-	res.send(waitingRoom.getWaiting());
+	res.send(room.getMembers());
+
+	// room.chat()
+});
+
+// Send a chat message to everyone in the waiting room
+app.get("/room/chat", verifyMiddleware, (req: Request, res: Response) => {
+
 });
 
 app.get("/room/leave", verifyMiddleware, (req: Request, res: Response) => {
@@ -50,7 +60,7 @@ app.get("/room/leave", verifyMiddleware, (req: Request, res: Response) => {
 	const fingerprint = FingerprintUtil.scan(req);
 
 	// 2. Remove the user from the waiting room
-	waitingRoom.removePeer({
+	room.leave({
 		id: fingerprint
 	});
 

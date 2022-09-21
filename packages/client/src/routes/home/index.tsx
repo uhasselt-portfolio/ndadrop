@@ -1,11 +1,20 @@
 import { h } from 'preact';
-import style from './style.css';
+import { useEffect } from 'preact/hooks';
+import API from '../../api';
 
-const Home = () => (
-	<div class={style.home}>
-		<h1>Home</h1>
-		<p>This is the Home component.</p>
-	</div>
-);
+const Home = () => {
+
+	useEffect(() => {
+		console.log("Welcome");
+		API.room().join();
+	}, []);
+
+	return (
+		<div>
+			<h1>Home</h1>
+			<p>This is the Home component.</p>
+		</div>
+	);
+}
 
 export default Home;
