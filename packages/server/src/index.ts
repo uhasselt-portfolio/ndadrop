@@ -21,26 +21,6 @@ app.use(cors());
 // Instances
 const room = new RoomService();
 
-// This API will act like an airdrop alternative
-// Requirement are:
-// - Only people on the same network can communicate
-// - When first connecting, the user will be added to a waiting room
-// - Users on the same network will see each other in the waiting room
-// - When a user is disconnected, the user will be removed from the waiting and chat room
-
-// Show members in room
-// app.get("/room/members", (req: Request, res: Response) => {
-
-// 	const id = FingerprintUtil.scanHttpRequest(req);
-
-// 	const members = room.getMembers();
-
-// 	// Filter out the id
-// 	const filteredMembers = members.filter((member) => member.id !== id);
-
-// 	res.send(members);
-// });
-
 io.on('connection', (socket) => {
 
 	socket.on('disconnect', () => {
@@ -63,6 +43,12 @@ io.on('connection', (socket) => {
 
 		socket.join(room.getRoomId());
 		io.to(room.getRoomId()).emit('members', room.getMembers());
+	});
+
+	socket.on('chat', (msg) => {
+		console.log("Received chat!");
+
+		io.to(room.getRoomId()).emit('chat', msg);
 	});
 });
 
