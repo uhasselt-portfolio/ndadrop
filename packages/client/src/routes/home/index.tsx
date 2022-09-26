@@ -73,7 +73,6 @@ const Home = () => {
 		})
 
 		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-			console.log("received icecandidate", message.iceCandidate);
 			rtcCon.receiveIceCandidate(message);
 		});
 

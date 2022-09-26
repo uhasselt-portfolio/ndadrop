@@ -126,8 +126,7 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('icecandidate', (msg : {candidate: any, peer : any}) => {
-		console.log("hey", msg);
+	socket.on('icecandidate', (msg : {iceCandidate: any, peer : any}) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
@@ -139,8 +138,7 @@ io.on('connection', (socket) => {
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
-			console.log("forwarding icecanditate,", msg.candidate);
-			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, newIceCandidate : msg.candidate});
+			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, iceCandidate : msg.iceCandidate});
 		}
 	});
 

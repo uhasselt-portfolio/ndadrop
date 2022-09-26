@@ -19,20 +19,22 @@ class RtcConnection {
         // add remote stream to video element
 
         if (!this.localStream) {
-
-            if (!hascameraacces) return
-
-            this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
-            this.onLocalStreamSet(this.localStream);
+            if (hascameraacces) {
+                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
+                this.onLocalStreamSet(this.localStream);
+            }
         }
 
         if (this.localStream) {
             this.localStream.getTracks().forEach((track) => {
-                if (this.localStream)
+                if (this.localStream) {
+                    console.log("adding track")
                     this.pc.addTrack(track, this.localStream)
+                }
             })
         }
 
+        console.log("adding ontrack")
         this.pc.ontrack = (event) => {
             console.log("ontrack", event)
             event.streams[0].getTracks().forEach((track) => {
@@ -111,6 +113,8 @@ class RtcConnection {
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
         if (msg.iceCandidate) {
+            console.log("inside", msg.iceCandidate)
+            console.log("receiver", this.pc)
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
             } catch (e) {
