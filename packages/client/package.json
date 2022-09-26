@@ -13,6 +13,7 @@
     "preact": "^10.10.0",
     "preact-render-to-string": "^5.2.1",
     "preact-router": "^3.2.1",
+    "react-router-dom": "^6.4.1",
     "socket.io-client": "^4.5.2"
   },
   "devDependencies": {

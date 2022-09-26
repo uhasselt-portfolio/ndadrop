@@ -2,7 +2,6 @@ import { createRef, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
 import RtcConnection from '../../api/RtcConnection';
-
 const Home = () => {
 
 	const socket = io('http://localhost:9005', {
