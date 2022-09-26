@@ -4,20 +4,28 @@ class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
     pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
-    localStream : MediaStream | undefined;
-    remoteStream : MediaStream | undefined;
+
+    private localStream : MediaStream | undefined;
+    private remoteStream : MediaStream | undefined;
+
+    // Handler
+    public onLocalStreamSet = (stream : MediaStream) => {}
+    public onRemoteStreamSet = (stream : MediaStream) => {}
 
     async createPeerConnection(socket : Socket, peer : any, hascameraacces : boolean = true) {
         console.log("createPeerConnection");
         this.pc = new RTCPeerConnection();
         this.remoteStream = new MediaStream();
+        this.onRemoteStreamSet(this.remoteStream);
         console.log("remotestreamsetup: ", this.remoteStream)
         // add remote stream to video element
 
         if (!this.localStream) {
-            if (hascameraacces)
-                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
-            // add local stream to video element
+
+            if (!hascameraacces) return
+
+            this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
+            this.onLocalStreamSet(this.localStream);
         }
 
         if (this.localStream)

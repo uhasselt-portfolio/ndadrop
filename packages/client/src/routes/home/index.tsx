@@ -9,7 +9,21 @@ const Home = () => {
 		transports: ['websocket'],
 	});
 
+
+	// Stream
+	const [localStream, setLocalStream] = useState<MediaStream>();
+	const [remoteStream, setRemoteStream] = useState<MediaStream>();
+
 	const rtcCon : RtcConnection = new RtcConnection();
+
+	rtcCon.onLocalStreamSet = (stream: MediaStream) => {
+		setLocalStream(stream);
+	}
+
+	rtcCon.onRemoteStreamSet = (stream: MediaStream) => {
+		setRemoteStream(stream);
+	}
+
 
 	// State
 	const [members, setMembers] = useState<string[]>([]);
@@ -29,7 +43,7 @@ const Home = () => {
 			setMessages(m => [...m, message]);
 		});
 
-		// TODO : sdp should be exchanged now 
+		// TODO : sdp should be exchanged now
 		//        => nu nog ICE candidates
 		// ICE candidates are only done when connecting a media stream
 		// for example without specifing a video stream it does not work, with a video stream like jori it does
@@ -114,7 +128,7 @@ const Home = () => {
 		});
 	}
 
-	
+
 
 	//testing
 	const renderVideo = () => {
@@ -130,16 +144,16 @@ const Home = () => {
 		// 	videoRemote.current.srcObject = rtcCon.remoteStream;
 		// }
 
-		console.log("localstream : ", rtcCon.localStream);
-		console.log("remotestream : ", rtcCon.remoteStream);
-		if (rtcCon.localStream) {
+		console.log("localstream : ", localStream);
+		console.log("remotestream : ", remoteStream);
+		if (localStream) {
 			console.log("rendering video");
 			const video: HTMLVideoElement = document.getElementById("local-id") as HTMLVideoElement;
-			video.srcObject = rtcCon.localStream
+			video.srcObject = localStream
 		}
-		if (rtcCon.remoteStream) {
+		if (remoteStream) {
 			const video: HTMLVideoElement = document.getElementById("remote-id") as HTMLVideoElement;
-			video.srcObject = rtcCon.remoteStream
+			video.srcObject = remoteStream
 		}
 
 		return (
