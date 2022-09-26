@@ -19,6 +19,8 @@
     "webrtc": "^1.14.1"
   },
   "scripts": {
-    "dev": "ts-node-dev src/index.ts"
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
   }
 }

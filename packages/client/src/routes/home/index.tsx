@@ -5,7 +5,7 @@ import RtcConnection from '../../api/RtcConnection';
 
 const Home = () => {
 
-	const socket = io('http://localhost:3000', {
+	const socket = io('http://localhost:9005', {
 		transports: ['websocket'],
 	});
 
