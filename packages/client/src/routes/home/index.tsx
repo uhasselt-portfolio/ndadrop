@@ -55,12 +55,10 @@ const Home = () => {
 		// sdpAnswer : the sdpAnswer information from a peer
 		// iceCandidate : an iceCandidate from a peer
 		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-			console.log('receive rtc request');
 			rtcCon.receivePermissionQuestion(msg, socket);
 		});
 
 		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
-            console.log("received permission answer : " + msg.accept);
             if(msg.accept) {
                 await rtcCon.SendSDP(socket, msg.peer);
             }
@@ -75,6 +73,7 @@ const Home = () => {
 		})
 
 		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+			console.log("received icecandidate", message.iceCandidate);
 			rtcCon.receiveIceCandidate(message);
 		});
 
@@ -134,15 +133,6 @@ const Home = () => {
 	const renderVideo = () => {
 		console.log("videolocal : ", videoLocal);
 		console.log("videolocal2 : ", videoLocal.current);
-		// if (videoLocal.current != undefined) {
-		// 	console.log("rendering video");
-		// 	videoLocal.current.srcObject = rtcCon.localStream;
-		// 	console.log(" localsteram ",rtcCon.localStream)
-		// }
-		// if (videoRemote.current != undefined) {
-		// 	console.log("rendering video");
-		// 	videoRemote.current.srcObject = rtcCon.remoteStream;
-		// }
 
 		console.log("localstream : ", localStream);
 		console.log("remotestream : ", remoteStream);
@@ -152,6 +142,7 @@ const Home = () => {
 			video.srcObject = localStream
 		}
 		if (remoteStream) {
+			console.log("rendering remote video");
 			const video: HTMLVideoElement = document.getElementById("remote-id") as HTMLVideoElement;
 			video.srcObject = remoteStream
 		}

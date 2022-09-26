@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
+		// console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
+		// console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
 		
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
@@ -126,11 +126,12 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('icecandidate', (msg : {newIceCandidate: any, peer : any}) => {
+	socket.on('icecandidate', (msg : {candidate: any, peer : any}) => {
+		console.log("hey", msg);
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member sending an ice candidate from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.newIceCandidate);
+		// console.log("member sending an ice candidate from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.newIceCandidate);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -138,7 +139,8 @@ io.on('connection', (socket) => {
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
-			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, newIceCandidate : msg.newIceCandidate});
+			console.log("forwarding icecanditate,", msg.candidate);
+			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, newIceCandidate : msg.candidate});
 		}
 	});
 

@@ -13,11 +13,9 @@ class RtcConnection {
     public onRemoteStreamSet = (stream : MediaStream) => {}
 
     async createPeerConnection(socket : Socket, peer : any, hascameraacces : boolean = true) {
-        console.log("createPeerConnection");
         this.pc = new RTCPeerConnection();
         this.remoteStream = new MediaStream();
         this.onRemoteStreamSet(this.remoteStream);
-        console.log("remotestreamsetup: ", this.remoteStream)
         // add remote stream to video element
 
         if (!this.localStream) {
@@ -28,14 +26,15 @@ class RtcConnection {
             this.onLocalStreamSet(this.localStream);
         }
 
-        if (this.localStream)
+        if (this.localStream) {
             this.localStream.getTracks().forEach((track) => {
                 if (this.localStream)
                     this.pc.addTrack(track, this.localStream)
             })
+        }
 
         this.pc.ontrack = (event) => {
-            console.log("ontrack")
+            console.log("ontrack", event)
             event.streams[0].getTracks().forEach((track) => {
                 if (this.remoteStream)
                     this.remoteStream.addTrack(track)
@@ -45,9 +44,8 @@ class RtcConnection {
         this.pc.onicecandidate = async (event) => {
             if(event.candidate){
                 // send ice candidate to other peer
-                console.log("sending ice candidate");
-                console.log(event.candidate);
                 if (event.candidate != null) {
+                    console.log("sending ice candidate", event.candidate)
                     socket.emit('icecandidate', {iceCandidate: event.candidate, peer : peer});
                 }
             }
@@ -57,7 +55,6 @@ class RtcConnection {
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
-        console.log("Asking for permission");
         // Make a http request to /room/askRTXPermission
         socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants'});
 
@@ -104,7 +101,6 @@ class RtcConnection {
     }
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
-        console.log("handleSdpAnswer");
         if (! this.pc.currentRemoteDescription) {
             await this.pc.setRemoteDescription(msg.answer);
         }
@@ -114,8 +110,6 @@ class RtcConnection {
 
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
-        console.log("receiveIceCandidate");
-        console.log(msg)
         if (msg.iceCandidate) {
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
