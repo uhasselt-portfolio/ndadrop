@@ -4,6 +4,7 @@ type Member = {
     id: string;
     name: string;
     rtc?: any;
+    socketId : any;
 }
 
 class RoomService {
@@ -37,6 +38,15 @@ class RoomService {
     // Get a list of member names
     public getMembers() {
         return this.members.map((p) => p.name);
+    }
+
+    // get a specific member via id
+    public getMember(memberId: Member['id']) {
+        return this.members.find((p) => p.id === memberId);
+    }
+    // get a specific member via its name
+    public getMemberByName(memberName: Member['name']) {
+        return this.members.find((p) => p.name === memberName);
     }
 
     public getRoomId() {

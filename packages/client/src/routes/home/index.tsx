@@ -1,12 +1,15 @@
 import { h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
+import RtcConnection from '../../api/RtcConnection';
 
 const Home = () => {
 
 	const socket = io('http://localhost:3000', {
 		transports: ['websocket'],
 	});
+
+	const rtcCon : RtcConnection = new RtcConnection();
 
 	// State
 	const [members, setMembers] = useState<string[]>([]);
@@ -23,6 +26,42 @@ const Home = () => {
 		socket.on('chat', (message: string) => {
 			setMessages(m => [...m, message]);
 		});
+
+		// TODO : sdp should be exchanged now 
+		//        => nu nog ICE candidates
+		// ICE candidates are only done when connecting a media stream
+		// for example without specifing a video stream it does not work, with a video stream like jori it does
+
+		// incoming messages pertaining to the rtc connection
+		// RTCPermissionRequest : an incoming request to start a rtc connection
+		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
+		// sdpOffer : the sdpOffer information from a peer
+		// sdpAnswer : the sdpAnswer information from a peer
+		// iceCandidate : an iceCandidate from a peer
+		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+			console.log('receive rtc request');
+			rtcCon.receivePermissionQuestion(msg, socket);
+		});
+
+		socket.on('rtcPermissionAnswer', (msg : {peer : any, accept : boolean}) => {
+            console.log("received permission answer : " + msg.accept);
+            if(msg.accept) {
+                rtcCon.SendSDP(socket, msg.peer);
+            }
+        });
+
+		socket.on('sdpOffer', (remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(socket, remoteOffer);
+		});
+
+		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(socket, answer);
+		})
+
+		socket.on('icecandidate', async (message : {iceMessage : any, peer : any}) => {
+			rtcCon.receiveIceCandidate(message);
+		});
+
 	}, []);
 
 	// Events
@@ -38,12 +77,17 @@ const Home = () => {
 		setMessage(message);
 	}
 
+	const onDirectChatInitiate = (member: any) => {
+		rtcCon.askForPermission(member, socket);
+	}
+
 	// Render
 	const renderMembers = () => {
 		return members.map((member: any) => {
 			return (
 				<li>
 					{member}
+					<button onClick={() => onDirectChatInitiate(member)}>DirectChat</button>
 				</li>
 			);
 		});
@@ -68,6 +112,16 @@ const Home = () => {
 		});
 	}
 
+	//testing
+	const renderVideo = () => {
+		if (rtcCon.mediaStream) {
+			return (
+
+				<video></video>
+			);
+		}
+	}
+
 	return (
 		<div>
 			<h1>Dropper</h1>
@@ -82,6 +136,7 @@ const Home = () => {
 			<button onClick={onChatSend}>Send</button>
 			<hr />
 			{renderMessages()}
+			{renderVideo()}
 		</div>
 	);
 }
