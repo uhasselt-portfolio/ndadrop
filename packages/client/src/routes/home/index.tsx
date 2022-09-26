@@ -15,7 +15,8 @@ const Home = () => {
 	const [members, setMembers] = useState<string[]>([]);
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
-	const videos = createRef();
+	const videoLocal = createRef();
+	const videoRemote = createRef();
 
 	useEffect(() => {
 		socket.emit('join');
@@ -115,13 +116,24 @@ const Home = () => {
 
 	//testing
 	const renderVideo = () => {
-		if (videos.current != null) {
+		console.log("videolocal : ", videoLocal);
+		if (videoLocal.current != null) {
 			console.log("rendering video");
-			videos.current.srcObject = rtcCon.mediaStream;
+			videoLocal.current.srcObject = rtcCon.localStream;
+			console.log(" localsteram ",rtcCon.localStream)
+		}
+		if (videoRemote.current != null) {
+			console.log("rendering video");
+			videoRemote.current.srcObject = rtcCon.remoteStream;
 		}
 		return (
-				
-			<video ref={videos} autoPlay></video>
+			<div>
+				local:
+				<video ref={videoLocal} autoPlay></video>
+				remote:
+				<video ref={videoRemote} autoPlay></video>
+			</div>
+
 		);
 	}
 

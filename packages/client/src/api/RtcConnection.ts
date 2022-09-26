@@ -1,63 +1,46 @@
 import io, { Socket } from 'socket.io-client';
 
-type Message = {
-    type : string,
-    candidate: string | null,
-    sdpMid : string | null,
-    sdpMLineIndex : number | null
-}
-
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
-    pc : any;
+    pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
+    localStream : MediaStream | undefined;
+    remoteStream : MediaStream | undefined;
 
-    createPeerConnection() {
+    async createPeerConnection(socket : Socket, peer : any) {
         this.pc = new RTCPeerConnection();
-        this.pc.onicecandidate = (event : RTCPeerConnectionIceEvent) => {
-            console.log("ice candidate");
-            console.log(event);
-            const message : Message = {
-                type: 'candidate',
-                candidate: '',
-                sdpMid: '',
-                sdpMLineIndex: 0,
-            };
-            if (event.candidate) {
-                message.candidate = event.candidate.candidate;
-                message.sdpMid = event.candidate.sdpMid;
-                message.sdpMLineIndex = event.candidate.sdpMLineIndex;
-            }
+        this.remoteStream = new MediaStream();
+        // add remote stream to video element
 
-            // signaling.postMessage(message)   => komt er op neer, we zenden gewoon ice informatie naar peer
-        };
-        this.pc.ontrack = (event : RTCTrackEvent) => {
-            //TODO setup tracking gedoe 
+        if (!this.localStream) {
+            this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
+            // add local stream to video element
         }
-        // pc.ontrack = e => remoteVideo.srcObject = e.streams[0];
-        // localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    }
 
-    // for testing
-    mediaStream : any = new MediaStream();
+        this.localStream.getTracks().forEach((track) => {
+            if (this.localStream)
+                this.pc.addTrack(track, this.localStream)
+        })
 
-    public async setupIceListener(socket : any, peer : any) {
-        // Listen for local ICE candidates on the local RTCPeerConnection
-        // this.pc.addEventListener('icecandidate', (event : any) => {
-        //     console.log("sending ice candidate");
-        //     if (event.candidate) {
-        //         socket.send('icecandidate', {newIceCandidate: event.candidate, peer : peer});
-        //     }
-        // });
-        this.pc.onicecandidate = (event : RTCPeerConnectionIceEvent) => {
-            console.log("sending ice candidate");
-            console.log(event.candidate);
-            if (event.candidate != null) {
-                socket.emit('icecandidate', {newIceCandidate: event.candidate, peer : peer});
+        this.pc.ontrack = (event) => {
+            event.streams[0].getTracks().forEach((track) => {
+                if (this.remoteStream)
+                    this.remoteStream.addTrack(track)
+            })
+        }
+
+        this.pc.onicecandidate = async (event) => {
+            if(event.candidate){
+                // send ice candidate to other peer
+                console.log("sending ice candidate");
+                console.log(event.candidate);
+                if (event.candidate != null) {
+                    socket.emit('icecandidate', {iceCandidate: event.candidate, peer : peer});
+                }
             }
         }
-    }
 
+    }
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
@@ -76,114 +59,44 @@ class RtcConnection {
         // if yes, send a permission answer to the server
         socket.emit('permissionAnswer', {peer : peer, accept :true});
 
-        this.pc = new RTCPeerConnection(this.pcConfig);
-
-        // this.mediaStream = null;
-
-        this.pc.ontrack = (obj : any) => {
-    
-            console.log("ontack");
-            console.log(obj);
-
-            // this.video = document.createElement('video');
-            console.log(this.mediaStream);
-            if (this.mediaStream == null)
-            {
-                console.log("creating media stream");
-                this.mediaStream = new MediaStream();
-                    // this.video.srcObject = mediaStream;
-                    // this.video.play();
-            }
-    
-            this.mediaStream.addTrack(obj.track);
-        }
-
-        this.setupIceListener(socket, peer);
-        // Listen for connectionstatechange on the local RTCPeerConnection
-        this.pc.addEventListener('connectionstatechange', (event : any) => {
-            if (this.pc.connectionState === 'connected') {
-                console.log('connected');
-            }
-        });
     }
 
     // Send SDP offer to the peer
     public async SendSDP(socket : any, peer : any) { //TODO : FIX any
-        this.pc = new RTCPeerConnection(this.pcConfig);
+        await this.createPeerConnection(socket, peer);
 
-        this.setupIceListener(socket, peer);
-        // Listen for connectionstatechange on the local RTCPeerConnection
-        this.pc.addEventListener('connectionstatechange', (event : any) => {
-            if (this.pc.connectionState === 'connected') {
-                console.log('connected');
-            }
-        });
+        let offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
 
-        // video from jori's code
-        navigator.mediaDevices.getUserMedia({video: true, audio: false}).then((stream) => {
-            console.log("Got stream");
-            console.log(stream);
-    
-            // Stream this!
-            this.pc.addStream(stream);
-    
-            this.pc.createOffer().then((offer : any) => {
-            
-                this.pc.setLocalDescription(offer).then(() => {
-                
-                    // document.getElementById("offer").value = offer.sdp;
-                    console.log("offer: ", offer);
-                    socket.emit('sdpOffer', {offer, peer});
-    
-                }).catch((error : any) => {
-                    console.log("Error in setLocalDescription: " + error);
-                });
-            }).catch((error : any) => {
-                console.log("Error in createOffer: " + error);
-            });
-    
-        }).catch((error) => {
-    
-            console.log("Error in getUserMedia: " + error);
-        });
+        // send offer to peer
+        socket.emit('sdpOffer', {offer, peer});
 
-        // const channel = this.pc.createDataChannel("chat");
-        // channel.onopen = (event : any) => {
-        //     channel.send('Hi you!');
-        //     }
-        // channel.onmessage = (event : any) => {
-        //     console.log(event.data);
-        // }
-
-        // let offer : RTCSessionDescription  = await this.pc.createOffer();
-        // console.log("offer : ", offer);
-        // await this.pc.setLocalDescription(offer);
-        // socket.emit('sdpOffer', {offer, peer});
+        return
     }
 
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
-        this.pc.setRemoteDescription(remoteOffer.offer);
+        await this.createPeerConnection(socket, remoteOffer.peer);
 
-        this.pc.ondatachannel = (event : any) => {
-            const channel = event.channel;
-                channel.onopen = (event : any) => {
-                channel.send('Hi back!');
-            }
-            channel.onmessage = (event : any) => {
-                console.log(event.data);
-            }
-        }
+        await this.pc.setRemoteDescription(remoteOffer.offer);
 
-        let answer = await this.pc.createAnswer();
-        await this.pc.setLocalDescription(answer);
-        socket.emit('sdpAnswer', {answer : answer, peer: remoteOffer.peer});
+        let tempAnswer = await this.pc.createAnswer();
+        await this.pc.setLocalDescription(tempAnswer);
+
+        // send answer to peer
+        socket.emit('sdpAnswer', {answer : tempAnswer, peer : remoteOffer.peer});
+
+
+        return
     }
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
         console.log("handleSdpAnswer");
-        const remoteDesc = new RTCSessionDescription(msg.answer);
-        await this.pc.setRemoteDescription(remoteDesc);
+        if (! this.pc.currentRemoteDescription) {
+            await this.pc.setRemoteDescription(msg.answer);
+        }
+
+        return
     }
 
     // receive an ice candidate from a peer
@@ -192,7 +105,7 @@ class RtcConnection {
         console.log(msg)
         if (msg.iceCandidate) {
             try {
-                await this.pc.addIceCandidate(msg.iceCandidate.candidate);
+                await this.pc.addIceCandidate(msg.iceCandidate);
             } catch (e) {
                 console.error('Error adding received ice candidate', e);
             }
