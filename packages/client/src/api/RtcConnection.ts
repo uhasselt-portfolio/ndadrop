@@ -7,22 +7,27 @@ class RtcConnection {
     localStream : MediaStream | undefined;
     remoteStream : MediaStream | undefined;
 
-    async createPeerConnection(socket : Socket, peer : any) {
+    async createPeerConnection(socket : Socket, peer : any, hascameraacces : boolean = true) {
+        console.log("createPeerConnection");
         this.pc = new RTCPeerConnection();
         this.remoteStream = new MediaStream();
+        console.log("remotestreamsetup: ", this.remoteStream)
         // add remote stream to video element
 
         if (!this.localStream) {
-            this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
+            if (hascameraacces)
+                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
             // add local stream to video element
         }
 
-        this.localStream.getTracks().forEach((track) => {
-            if (this.localStream)
-                this.pc.addTrack(track, this.localStream)
-        })
+        if (this.localStream)
+            this.localStream.getTracks().forEach((track) => {
+                if (this.localStream)
+                    this.pc.addTrack(track, this.localStream)
+            })
 
         this.pc.ontrack = (event) => {
+            console.log("ontrack")
             event.streams[0].getTracks().forEach((track) => {
                 if (this.remoteStream)
                     this.remoteStream.addTrack(track)
@@ -76,7 +81,7 @@ class RtcConnection {
 
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
-        await this.createPeerConnection(socket, remoteOffer.peer);
+        await this.createPeerConnection(socket, remoteOffer.peer, false);
 
         await this.pc.setRemoteDescription(remoteOffer.offer);
 

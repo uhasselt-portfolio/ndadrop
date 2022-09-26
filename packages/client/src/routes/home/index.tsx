@@ -45,14 +45,14 @@ const Home = () => {
 			rtcCon.receivePermissionQuestion(msg, socket);
 		});
 
-		socket.on('rtcPermissionAnswer', (msg : {peer : any, accept : boolean}) => {
+		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
             console.log("received permission answer : " + msg.accept);
             if(msg.accept) {
-                rtcCon.SendSDP(socket, msg.peer);
+                await rtcCon.SendSDP(socket, msg.peer);
             }
         });
 
-		socket.on('sdpOffer', (remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
 			rtcCon.sendSDPAnswer(socket, remoteOffer);
 		});
 
@@ -114,24 +114,40 @@ const Home = () => {
 		});
 	}
 
+	
+
 	//testing
 	const renderVideo = () => {
 		console.log("videolocal : ", videoLocal);
-		if (videoLocal.current != null) {
+		console.log("videolocal2 : ", videoLocal.current);
+		// if (videoLocal.current != undefined) {
+		// 	console.log("rendering video");
+		// 	videoLocal.current.srcObject = rtcCon.localStream;
+		// 	console.log(" localsteram ",rtcCon.localStream)
+		// }
+		// if (videoRemote.current != undefined) {
+		// 	console.log("rendering video");
+		// 	videoRemote.current.srcObject = rtcCon.remoteStream;
+		// }
+
+		console.log("localstream : ", rtcCon.localStream);
+		console.log("remotestream : ", rtcCon.remoteStream);
+		if (rtcCon.localStream) {
 			console.log("rendering video");
-			videoLocal.current.srcObject = rtcCon.localStream;
-			console.log(" localsteram ",rtcCon.localStream)
+			const video: HTMLVideoElement = document.getElementById("local-id") as HTMLVideoElement;
+			video.srcObject = rtcCon.localStream
 		}
-		if (videoRemote.current != null) {
-			console.log("rendering video");
-			videoRemote.current.srcObject = rtcCon.remoteStream;
+		if (rtcCon.remoteStream) {
+			const video: HTMLVideoElement = document.getElementById("remote-id") as HTMLVideoElement;
+			video.srcObject = rtcCon.remoteStream
 		}
+
 		return (
 			<div>
 				local:
-				<video ref={videoLocal} autoPlay></video>
+				<video ref={videoLocal} id={"local-id"} autoPlay></video>
 				remote:
-				<video ref={videoRemote} autoPlay></video>
+				<video ref={videoRemote} id={"remote-id"} autoPlay></video>
 			</div>
 
 		);
