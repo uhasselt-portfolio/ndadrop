@@ -1,21 +1,61 @@
 import io, { Socket } from 'socket.io-client';
 
+type Message = {
+    type : string,
+    candidate: string | null,
+    sdpMid : string | null,
+    sdpMLineIndex : number | null
+}
+
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
     pc : any;
 
+    createPeerConnection() {
+        this.pc = new RTCPeerConnection();
+        this.pc.onicecandidate = (event : RTCPeerConnectionIceEvent) => {
+            console.log("ice candidate");
+            console.log(event);
+            const message : Message = {
+                type: 'candidate',
+                candidate: '',
+                sdpMid: '',
+                sdpMLineIndex: 0,
+            };
+            if (event.candidate) {
+                message.candidate = event.candidate.candidate;
+                message.sdpMid = event.candidate.sdpMid;
+                message.sdpMLineIndex = event.candidate.sdpMLineIndex;
+            }
+
+            // signaling.postMessage(message)   => komt er op neer, we zenden gewoon ice informatie naar peer
+        };
+        this.pc.ontrack = (event : RTCTrackEvent) => {
+            //TODO setup tracking gedoe 
+        }
+        // pc.ontrack = e => remoteVideo.srcObject = e.streams[0];
+        // localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    }
+
     // for testing
-    mediaStream : any = null;
+    mediaStream : any = new MediaStream();
 
     public async setupIceListener(socket : any, peer : any) {
         // Listen for local ICE candidates on the local RTCPeerConnection
-        this.pc.addEventListener('icecandidate', (event : any) => {
+        // this.pc.addEventListener('icecandidate', (event : any) => {
+        //     console.log("sending ice candidate");
+        //     if (event.candidate) {
+        //         socket.send('icecandidate', {newIceCandidate: event.candidate, peer : peer});
+        //     }
+        // });
+        this.pc.onicecandidate = (event : RTCPeerConnectionIceEvent) => {
             console.log("sending ice candidate");
-            if (event.candidate) {
-                socket.send('icecandidate', {newIceCandidate: event.candidate, peer : peer});
+            console.log(event.candidate);
+            if (event.candidate != null) {
+                socket.emit('icecandidate', {newIceCandidate: event.candidate, peer : peer});
             }
-        });
+        }
     }
 
 
@@ -46,9 +86,10 @@ class RtcConnection {
             console.log(obj);
 
             // this.video = document.createElement('video');
-    
-            if (!this.mediaStream)
+            console.log(this.mediaStream);
+            if (this.mediaStream == null)
             {
+                console.log("creating media stream");
                 this.mediaStream = new MediaStream();
                     // this.video.srcObject = mediaStream;
                     // this.video.play();
@@ -146,10 +187,12 @@ class RtcConnection {
     }
 
     // receive an ice candidate from a peer
-    public async receiveIceCandidate(msg : {iceMessage : any, peer : any}) {
-        if (msg.iceMessage.iceCandidate) {
+    public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
+        console.log("receiveIceCandidate");
+        console.log(msg)
+        if (msg.iceCandidate) {
             try {
-                await this.pc.addIceCandidate(msg.iceMessage.iceCandidate);
+                await this.pc.addIceCandidate(msg.iceCandidate.candidate);
             } catch (e) {
                 console.error('Error adding received ice candidate', e);
             }

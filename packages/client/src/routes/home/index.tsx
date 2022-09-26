@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { createRef, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
 import RtcConnection from '../../api/RtcConnection';
@@ -15,6 +15,7 @@ const Home = () => {
 	const [members, setMembers] = useState<string[]>([]);
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
+	const videos = createRef();
 
 	useEffect(() => {
 		socket.emit('join');
@@ -58,7 +59,7 @@ const Home = () => {
 			rtcCon.handleSdpAnswer(socket, answer);
 		})
 
-		socket.on('icecandidate', async (message : {iceMessage : any, peer : any}) => {
+		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
 			rtcCon.receiveIceCandidate(message);
 		});
 
@@ -114,12 +115,14 @@ const Home = () => {
 
 	//testing
 	const renderVideo = () => {
-		if (rtcCon.mediaStream) {
-			return (
-
-				<video></video>
-			);
+		if (videos.current != null) {
+			console.log("rendering video");
+			videos.current.srcObject = rtcCon.mediaStream;
 		}
+		return (
+				
+			<video ref={videos} autoPlay></video>
+		);
 	}
 
 	return (
