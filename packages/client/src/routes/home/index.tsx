@@ -13,7 +13,6 @@ const Home = () => {
 	const [localStream, setLocalStream] = useState<MediaStream>();
 	const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
-	// const rtcCon : RtcConnection = new RtcConnection(); // problem here, i think this is reinitialized on every render
 
 	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
 

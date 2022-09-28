@@ -200,12 +200,9 @@ class RtcConnection {
 
     // close a connection with a peer
     public async closeConnection() {
-
+        //TODO
     }
 
-    public async sendMsg(msg: string) {
-
-    }
 }
 
 export default RtcConnection;
