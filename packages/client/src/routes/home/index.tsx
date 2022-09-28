@@ -13,7 +13,9 @@ const Home = () => {
 	const [localStream, setLocalStream] = useState<MediaStream>();
 	const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
-	const rtcCon : RtcConnection = new RtcConnection();
+	// const rtcCon : RtcConnection = new RtcConnection(); // problem here, i think this is reinitialized on every render
+
+	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
 
 	rtcCon.onLocalStreamSet = (stream: MediaStream) => {
 		setLocalStream(stream);
@@ -80,8 +82,10 @@ const Home = () => {
 	// Events
 	const onChatSend = (e: any) => {
 		e.preventDefault();
-		socket.emit('chat', message);
+		// socket.emit('chat', message);
 		setMessage("");
+		// rtcCon.sendDataChannelMessage()
+		rtcCon.sendMessageThroughDataChannel(message);
 	}
 
 	const onTyping = (e: any) => {
@@ -129,18 +133,11 @@ const Home = () => {
 
 	//testing
 	const renderVideo = () => {
-		console.log("videolocal : ", videoLocal);
-		console.log("videolocal2 : ", videoLocal.current);
-
-		console.log("localstream : ", localStream);
-		console.log("remotestream : ", remoteStream);
 		if (localStream) {
-			console.log("rendering video");
 			const video: HTMLVideoElement = document.getElementById("local-id") as HTMLVideoElement;
 			video.srcObject = localStream
 		}
 		if (remoteStream) {
-			console.log("rendering remote video");
 			const video: HTMLVideoElement = document.getElementById("remote-id") as HTMLVideoElement;
 			video.srcObject = remoteStream
 		}
