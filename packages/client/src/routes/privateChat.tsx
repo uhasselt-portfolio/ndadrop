@@ -1,5 +1,5 @@
 import { createRef, h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
 
 type ChatModes = {
@@ -21,6 +21,7 @@ type Message = {
  * @para socket : the socket to use for the chat
  */
 interface Props {
+	isCaller : boolean,
 	chatModes : ChatModes,
 	peer : any,
 	socket : any
@@ -100,13 +101,31 @@ const PrivateChat = (props: Props) => {
 
 		return (
 			<div>
-				local:
+				Yourself:
 				<video ref={videoLocal} id={"local-id"} autoPlay></video>
 				remote:
 				<video ref={videoRemote} id={"remote-id"} autoPlay></video>
 			</div>
 
 		);
+	}
+
+	const renderMessaging = () => {
+		return(
+			<div>
+				<input
+				onChange={(e) => onTyping(e)}
+				value={message}
+				type="text"
+				/>
+				<button onClick={onChatSend}>Send</button>
+				{renderMessages()}
+			</div>
+		)
+	}
+
+	const renderTransferedFiles = () => {
+
 	}
 
 
@@ -120,44 +139,53 @@ const PrivateChat = (props: Props) => {
 
 
     // setup the rtc connection
+
 	useEffect(() => {
-		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-			rtcCon.receivePermissionQuestion(msg, socket);
+		// incoming messages pertaining to the rtc connection
+		// RTCPermissionRequest : an incoming request to start a rtc connection
+		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
+		// sdpOffer : the sdpOffer information from a peer
+		// sdpAnswer : the sdpAnswer information from a peer
+		// iceCandidate : an iceCandidate from a peer
+		props.socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+			rtcCon.receivePermissionQuestion(msg, props.socket);
 		});
 
-		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+		props.socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
             if(msg.accept) {
-                await rtcCon.SendSDP(socket, msg.peer);
+                await rtcCon.SendSDP(props.socket, msg.peer);
             }
         });
 
-		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(socket, remoteOffer);
+		props.socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(props.socket, remoteOffer);
 		});
 
-		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(socket, answer);
+		props.socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(props.socket, answer);
 		})
 
-		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+		props.socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
 			rtcCon.receiveIceCandidate(message);
 		});
+
 	}, []);
+
+	// the caller initiates the connection and sends a webrtcRequest 
+	if (props.isCaller) {
+		console.log("caller");
+		rtcCon.askForPermission(props.peer, props.socket);
+	} else {
+		console.log("callee");
+	}
 
 
 	// render
     return (
 		<div>
             <h1>Private Chat</h1>
-            <input
-				onChange={(e) => onTyping(e)}
-				value={message}
-				type="text"
-			/>
-			<button onClick={onChatSend}>Send</button>
-			<hr />
-			{renderMessages()}
-			{renderVideo()}
+			{props.chatModes.video && renderVideo()}
+            {props.chatModes.text && renderMessaging()}
 		</div>
 	);
 

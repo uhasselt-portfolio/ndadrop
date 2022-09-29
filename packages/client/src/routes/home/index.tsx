@@ -2,12 +2,9 @@ import { createRef, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
 import RtcConnection from '../../api/RtcConnection';
-import { route } from 'preact-router';
-import PrivateChat from '../privateChat';
-
 const Home = () => {
 
-	const socket = io('http://localhost:9005', {
+	const socket = io('http://localhost:3000', {
 		transports: ['websocket'],
 	});
 
@@ -15,7 +12,6 @@ const Home = () => {
 	// Stream
 	const [localStream, setLocalStream] = useState<MediaStream>();
 	const [remoteStream, setRemoteStream] = useState<MediaStream>();
-	const [isInPrivateChat, setIsInPrivateChat] = useState<boolean>(false);
 
 
 	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
@@ -58,27 +54,27 @@ const Home = () => {
 		// sdpOffer : the sdpOffer information from a peer
 		// sdpAnswer : the sdpAnswer information from a peer
 		// iceCandidate : an iceCandidate from a peer
-		// socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-		// 	rtcCon.receivePermissionQuestion(msg, socket);
-		// });
+		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+			rtcCon.receivePermissionQuestion(msg, socket);
+		});
 
-		// socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
-        //     if(msg.accept) {
-        //         await rtcCon.SendSDP(socket, msg.peer);
-        //     }
-        // });
+		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+            if(msg.accept) {
+                await rtcCon.SendSDP(socket, msg.peer);
+            }
+        });
 
-		// socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-		// 	rtcCon.sendSDPAnswer(socket, remoteOffer);
-		// });
+		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(socket, remoteOffer);
+		});
 
-		// socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-		// 	rtcCon.handleSdpAnswer(socket, answer);
-		// })
+		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(socket, answer);
+		})
 
-		// socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-		// 	rtcCon.receiveIceCandidate(message);
-		// });
+		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+			rtcCon.receiveIceCandidate(message);
+		});
 
 	}, []);
 
@@ -98,8 +94,6 @@ const Home = () => {
 	}
 
 	const onDirectChatInitiate = (member: any) => {
-		setIsInPrivateChat(true);
-		route("/privateChat");
 		rtcCon.askForPermission(member, socket);
 	}
 
@@ -158,7 +152,7 @@ const Home = () => {
 		);
 	}
 
-	const renderHomeScreen = () => {
+	return (
 		<div>
 			<h1>Dropper</h1>
 			<h3>Friends who're online:</h3>
@@ -173,17 +167,6 @@ const Home = () => {
 			<hr />
 			{renderMessages()}
 			{renderVideo()}
-		</div>
-	}
-
-	const renderPrivateChat = () => {
-		return  <PrivateChat chatModes={} peer={} socket={} />;
-	}
-
-	return (
-		<div>
-			{isInPrivateChat && renderPrivateChat()}
-			{!isInPrivateChat && renderHomeScreen()}
 		</div>
 	);
 }
