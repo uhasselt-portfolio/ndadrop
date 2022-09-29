@@ -8,9 +8,16 @@ class RtcConnection {
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
 
+    // constructor(messagesHandler : (name: string) => void, fileHandler :(name: string) => void) {
+    //     this.onGetMessage = messagesHandler;
+    //     this.onGetFile = fileHandler;
+    // }
+
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
     public onRemoteStreamSet = (stream : MediaStream) => {}
+    public onGetMessage = (name: string) => {}
+    public onGetFile = (name: string) => {}
 
     // datachannels
     private dataChannel : RTCDataChannel | undefined;
@@ -18,7 +25,6 @@ class RtcConnection {
 
     // datachannelfuntions
     sendMessageThroughDataChannel(msg : string) {
-        console.log("sending message : ", msg)
         this.dataChannel?.send(msg);
     }
 
@@ -68,7 +74,7 @@ class RtcConnection {
             // in the browser, when running the this object inside the member functions is a RTCChannel object, 
             // but when writing and compiling the code it thinks it is a rtcConnection object
             this.dataChannel.onmessage = (event :  MessageEvent<any>) => {
-                console.log("Message: " + event.data);
+                this.onGetMessage(event.data);
             }
             // this.dataChannel.onopen = this.handleDataChannelStatusChange;
             this.dataChannel.onopen = (event :  Event) => {
@@ -99,7 +105,7 @@ class RtcConnection {
             this.pc.ondatachannel = (event : RTCDataChannelEvent) => {
                 this.dataChannel = event.channel;
                 this.dataChannel.onmessage = (event :  MessageEvent<any>) => {
-                    console.log("Message: " + event.data);
+                    this.onGetMessage(event.data);
                 };
                 this.dataChannel.onopen = (event :  Event) => {
                     if (this.dataChannel) {

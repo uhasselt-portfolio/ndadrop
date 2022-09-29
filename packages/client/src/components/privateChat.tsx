@@ -58,6 +58,14 @@ const PrivateChat = (props: Props) => {
 		setMessage(message);
 	}
 
+	const onGetMessage = (name: string) => {
+		console.log("onGetMessage : " + name);
+	}
+
+    const onGetFile = (name: string) => {
+		
+	}
+
 	// Webcam
 	const handleLocalWebcamView = () => {
 		rtcCon.onLocalStreamSet = (stream: MediaStream) => {
@@ -183,6 +191,9 @@ const PrivateChat = (props: Props) => {
     // setup the rtc connection
 
 	useEffect(() => {
+		rtcCon.onGetMessage = onGetMessage;
+		rtcCon.onGetFile = onGetFile;
+
 		// the caller initiates the connection and sends a webrtcRequest 
 		if (props.isCaller) {
 			console.log("caller", props);
