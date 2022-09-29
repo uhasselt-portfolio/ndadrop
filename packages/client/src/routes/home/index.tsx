@@ -134,7 +134,7 @@ const Home = () => {
 		setMessage(message);
 	}
 
-	const onDirectChatInitiate = (member: any) => {
+	const onDirectChatInitiate = (member: string) => {
 		setPrivateChatisCaller(true);
 		setPrivateChatPeer(member);
 		setIsInPrivateChat(true);
@@ -192,7 +192,7 @@ const Home = () => {
 				<h1>Dropper</h1>
 				<h3>Friends who're online:</h3>
 				{/* <MemberList socket={socket} /> */}
-				<MemberList ownName={ownName} />
+				<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
 				<h3>Chat with friends:</h3>
 				<input
 					onChange={(e) => onTyping(e)}
@@ -207,16 +207,17 @@ const Home = () => {
 		)
 	}
 
-	// const renderPrivateChat = () => {
-	// 	return  <PrivateChat isCaller={} chatModes={} peer={} socket={} />;
-	// }
+	const renderPrivateChat = () => {
+		return <PrivateChat isCaller={privateChatisCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} socket={socket} />
+	}
 
-	//<PrivateChat isCaller={privateChatisCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} socket={socket} />
+	//
 
 	const render = () => {
 		return(
 			<div>
-				{renderHomeScreen()}
+				{!isInPrivateChat && renderHomeScreen()}
+				{isInPrivateChat && renderPrivateChat()}
 			</div>
 		)
 	}

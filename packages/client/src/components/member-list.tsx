@@ -5,6 +5,7 @@ import { SocketContext } from './app';
 
 interface Props {
     ownName: string;
+    onDirectChatClick: (name: string) => void;
 }
 
 const MemberList = (props: Props) => {
@@ -26,7 +27,10 @@ const MemberList = (props: Props) => {
         const filteredMembers = members.filter(member => member !== props.ownName);
 
         return filteredMembers.map((member) => {
-            return <li>{member}</li>;
+            return <li>
+                <div>{member}</div>
+                <button onClick={() => props.onDirectChatClick(member)}>Call</button>
+            </li>;
         });
     }
 
