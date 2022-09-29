@@ -3,7 +3,11 @@ import { useContext, useState } from "preact/hooks";
 import { Socket } from "socket.io-client";
 import { SocketContext } from './app';
 
-const MemberList = () => {
+interface Props {
+    ownName: string;
+}
+
+const MemberList = (props: Props) => {
 
     // Context
     const socket = useContext(SocketContext);
@@ -18,7 +22,10 @@ const MemberList = () => {
             setMembers(members);
         });
 
-        return members.map((member) => {
+        // Everyone except yourself
+        const filteredMembers = members.filter(member => member !== props.ownName);
+
+        return filteredMembers.map((member) => {
             return <li>{member}</li>;
         });
     }

@@ -21,6 +21,7 @@ const Home = () => {
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
 	const [isInPrivateChat, setIsInPrivateChat] = useState<boolean>(false);
+	const [ownName, setOwnName] = useState<string>("");
 
 	const [privateChatPeer, setPrivateChatPeer] = useState<string>("");
 	const [privateChatisCaller, setPrivateChatisCaller] = useState<boolean>(false);
@@ -31,12 +32,10 @@ const Home = () => {
 
 	// Constructor
 	useEffect(() => {
-
-		console.log("join");
-
 		socket.emit('join');
 
 		// Sockets
+		handleOwnName();
 		// sendJoinSignal();
 		// handleChatSend()
 
@@ -53,6 +52,13 @@ const Home = () => {
 	}, []);
 
 	// Socket handlers
+	const handleOwnName = () => {
+		socket.on('name', (name : string) => {
+			setOwnName(name);
+		})
+	}
+
+
 	// const sendJoinSignal = () => {
 	// 	socket.emit('join');
 	// }
@@ -186,7 +192,7 @@ const Home = () => {
 				<h1>Dropper</h1>
 				<h3>Friends who're online:</h3>
 				{/* <MemberList socket={socket} /> */}
-				<MemberList />
+				<MemberList ownName={ownName} />
 				<h3>Chat with friends:</h3>
 				<input
 					onChange={(e) => onTyping(e)}
