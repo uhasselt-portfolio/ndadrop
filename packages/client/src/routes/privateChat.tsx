@@ -13,11 +13,10 @@ type Message = {
     own : boolean
 }
 
-// TODO : how to give arguments to a component?
-
 /*
  * The page for a one-on-one chat with another user
  * Can be used to initiate a normal message char or a video chat
+ * The caller goes to this page and the callee is redirected to this page accepting the call
  * @para chatModes : the mode to initiate the chat in
  * @para peer : the peer to initiate the chat with ( TODO : set correct type, but now any because I don't know if it will change)
  * @para socket : the socket to use for the chat
@@ -115,6 +114,32 @@ const PrivateChat = (chatModes : ChatModes, peer : any, socket :  any) => {
 
 
     // setup the rtc connection
+	useEffect(() => {
+		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+			rtcCon.receivePermissionQuestion(msg, socket);
+		});
+
+		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+            if(msg.accept) {
+                await rtcCon.SendSDP(socket, msg.peer);
+            }
+        });
+
+		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(socket, remoteOffer);
+		});
+
+		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(socket, answer);
+		})
+
+		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+			rtcCon.receiveIceCandidate(message);
+		});
+	}, []);
+
+
+	// render
     return (
 		<div>
             <h1>Private Chat</h1>

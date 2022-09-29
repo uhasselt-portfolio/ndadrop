@@ -54,27 +54,27 @@ const Home = () => {
 		// sdpOffer : the sdpOffer information from a peer
 		// sdpAnswer : the sdpAnswer information from a peer
 		// iceCandidate : an iceCandidate from a peer
-		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-			rtcCon.receivePermissionQuestion(msg, socket);
-		});
+		// socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+		// 	rtcCon.receivePermissionQuestion(msg, socket);
+		// });
 
-		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
-            if(msg.accept) {
-                await rtcCon.SendSDP(socket, msg.peer);
-            }
-        });
+		// socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+        //     if(msg.accept) {
+        //         await rtcCon.SendSDP(socket, msg.peer);
+        //     }
+        // });
 
-		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(socket, remoteOffer);
-		});
+		// socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+		// 	rtcCon.sendSDPAnswer(socket, remoteOffer);
+		// });
 
-		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(socket, answer);
-		})
+		// socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+		// 	rtcCon.handleSdpAnswer(socket, answer);
+		// })
 
-		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-			rtcCon.receiveIceCandidate(message);
-		});
+		// socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+		// 	rtcCon.receiveIceCandidate(message);
+		// });
 
 	}, []);
 
