@@ -134,7 +134,6 @@ class RtcConnection {
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
         // Make a http request to /room/askRTXPermission
         socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants'});
-
     }
 
     // receive a permission request from another peer via the server
@@ -145,7 +144,6 @@ class RtcConnection {
         const accept = true;
         // if yes, send a permission answer to the server
         socket.emit('permissionAnswer', {peer : peer, accept :true});
-
     }
 
     // Send SDP offer to the peer

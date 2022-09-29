@@ -55,6 +55,47 @@ const PrivateChat = (props: Props) => {
 		setMessage(message);
 	}
 
+	// Webcam
+	const handleLocalWebcamView = () => {
+		rtcCon.onLocalStreamSet = (stream: MediaStream) => {
+			setLocalStream(stream);
+		}
+	}
+
+	const handleRemoteWebcamView = () => {
+		rtcCon.onRemoteStreamSet = (stream: MediaStream) => {
+			setRemoteStream(stream);
+		}
+	}
+
+	// WebRTC Handlers
+	const handleIceCandidate = () => {
+		props.socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+			rtcCon.receiveIceCandidate(message);
+		});
+	}
+
+	const handleSdpOffer = async () => {
+		props.socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(props.socket, remoteOffer);
+		});
+	}
+
+	const handleSdpAnswer = async () => {
+		props.socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(props.socket, answer);
+		})
+	}
+
+	const handlePermissionAnswer = async () => {
+		props.socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+			if(msg.accept) {
+				await rtcCon.SendSDP(props.socket, msg.peer);
+			}
+		});
+	}
+
+	// Render functions
     const renderMessages = () => {
 
 		if (messages.length === 0  && messages.length === 0) {
@@ -129,54 +170,33 @@ const PrivateChat = (props: Props) => {
 	}
 
 
-    // callbacks
-	rtcCon.onLocalStreamSet = (stream: MediaStream) => {
-		setLocalStream(stream);
-	}
-	rtcCon.onRemoteStreamSet = (stream: MediaStream) => {
-		setRemoteStream(stream);
-	}
-
-
     // setup the rtc connection
 
 	useEffect(() => {
+		console.log("useEffect");
 		// incoming messages pertaining to the rtc connection
-		// RTCPermissionRequest : an incoming request to start a rtc connection
 		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
 		// sdpOffer : the sdpOffer information from a peer
 		// sdpAnswer : the sdpAnswer information from a peer
 		// iceCandidate : an iceCandidate from a peer
-		props.socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-			rtcCon.receivePermissionQuestion(msg, props.socket);
-		});
-
-		props.socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
-            if(msg.accept) {
-                await rtcCon.SendSDP(props.socket, msg.peer);
-            }
-        });
-
-		props.socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(props.socket, remoteOffer);
-		});
-
-		props.socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(props.socket, answer);
-		})
-
-		props.socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-			rtcCon.receiveIceCandidate(message);
-		});
+		handlePermissionAnswer();
+		handleSdpOffer();
+		handleSdpAnswer();
+		handleIceCandidate();
+		
+		// Webcam
+		handleLocalWebcamView();
+		handleRemoteWebcamView();
 
 	}, []);
 
 	// the caller initiates the connection and sends a webrtcRequest 
 	if (props.isCaller) {
-		console.log("caller");
+		console.log("caller", props);
 		rtcCon.askForPermission(props.peer, props.socket);
 	} else {
-		console.log("callee");
+		console.log("callee", props);
+		rtcCon.receivePermissionQuestion({peer : props.peer}, props.socket);
 	}
 
 

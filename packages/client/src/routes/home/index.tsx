@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from 'preact/hooks';
 import { SocketContext } from '../../components/app';
 import RtcConnection from '../../api/RtcConnection';
 import MemberList from '../../components/member-list';
+import PrivateChat from '../../components/privateChat';
 
 const Home = () => {
 
@@ -19,6 +20,10 @@ const Home = () => {
 	// State
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
+	const [isInPrivateChat, setIsInPrivateChat] = useState<boolean>(false);
+
+	const [privateChatPeer, setPrivateChatPeer] = useState<string>("");
+	const [privateChatisCaller, setPrivateChatisCaller] = useState<boolean>(false);
 
 	// Refs
 	const videoLocal = createRef();
@@ -77,11 +82,15 @@ const Home = () => {
 	// 	})
 	// }
 
-	// const handlePermissionRequest = async () => {
-	// 	socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-	// 		rtcCon.receivePermissionQuestion(msg, socket);
-	// 	});
-	// }
+	const handlePermissionRequest = async () => {
+		// TODO : moet anders, moet de chat pagina aanmaken en dan doorverwijzen
+		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+			setIsInPrivateChat(true);
+			setPrivateChatisCaller(false);
+			setPrivateChatPeer(msg.peer);
+			// rtcCon.receivePermissionQuestion(msg, socket);
+		});
+	}
 
 	// const handlePermissionAnswer = async () => {
 	// 	socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
@@ -117,6 +126,13 @@ const Home = () => {
 		e.preventDefault();
 		const message = e.target.value;
 		setMessage(message);
+	}
+
+	const onDirectChatInitiate = (member: any) => {
+		setPrivateChatisCaller(true);
+		setPrivateChatPeer(member);
+		setIsInPrivateChat(true);
+		// rtcCon.askForPermission(member, socket);
 	}
 
 	// Render
@@ -188,6 +204,8 @@ const Home = () => {
 	// const renderPrivateChat = () => {
 	// 	return  <PrivateChat isCaller={} chatModes={} peer={} socket={} />;
 	// }
+
+	//<PrivateChat isCaller={privateChatisCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} socket={socket} />
 
 	const render = () => {
 		return(
