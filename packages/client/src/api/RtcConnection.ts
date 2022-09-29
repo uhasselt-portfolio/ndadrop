@@ -12,15 +12,25 @@ class RtcConnection {
     public onLocalStreamSet = (stream : MediaStream) => {}
     public onRemoteStreamSet = (stream : MediaStream) => {}
 
+    // datachannels
+    private dataChannel : RTCDataChannel | undefined;
+
+
+    // datachannelfuntions
+    sendMessageThroughDataChannel(msg : string) {
+        console.log("sending message : ", msg)
+        this.dataChannel?.send(msg);
+    }
+
     async createPeerConnection(socket : Socket, peer : any, hascameraacces : boolean = true) {
-        this.pc = new RTCPeerConnection();
+        this.pc = new RTCPeerConnection(this.pcConfig);
         this.remoteStream = new MediaStream();
         this.onRemoteStreamSet(this.remoteStream);
         // add remote stream to video element
 
         if (!this.localStream) {
             if (hascameraacces) {
-                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false})
+                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
                 this.onLocalStreamSet(this.localStream);
             }
         }
@@ -28,15 +38,12 @@ class RtcConnection {
         if (this.localStream) {
             this.localStream.getTracks().forEach((track) => {
                 if (this.localStream) {
-                    console.log("adding track")
                     this.pc.addTrack(track, this.localStream)
                 }
             })
         }
 
-        console.log("adding ontrack")
         this.pc.ontrack = (event) => {
-            console.log("ontrack", event)
             event.streams[0].getTracks().forEach((track) => {
                 if (this.remoteStream)
                     this.remoteStream.addTrack(track)
@@ -47,11 +54,79 @@ class RtcConnection {
             if(event.candidate){
                 // send ice candidate to other peer
                 if (event.candidate != null) {
-                    console.log("sending ice candidate", event.candidate)
                     socket.emit('icecandidate', {iceCandidate: event.candidate, peer : peer});
                 }
             }
         }
+
+        // test datachannel
+        // for testing we use cameraccess
+        let isCaller = hascameraacces;
+        if (isCaller) {
+            this.dataChannel = this.pc.createDataChannel("testChannel");
+            // when these are not array functions, but member functions of rtcConnection, they don't work
+            // in the browser, when running the this object inside the member functions is a RTCChannel object, 
+            // but when writing and compiling the code it thinks it is a rtcConnection object
+            this.dataChannel.onmessage = (event :  MessageEvent<any>) => {
+                console.log("Message: " + event.data);
+            }
+            // this.dataChannel.onopen = this.handleDataChannelStatusChange;
+            this.dataChannel.onopen = (event :  Event) => {
+                if (this.dataChannel) {
+            
+                    var state = this.dataChannel.readyState;
+                
+                    if (state === "open") {
+                        console.log("dataChannel open");
+                    } else {
+                        console.log("dataChannel closed");
+                    }
+                }
+            }
+            this.dataChannel.onclose = (event :  Event) => {
+                if (this.dataChannel) {
+            
+                    var state = this.dataChannel.readyState;
+                
+                    if (state === "open") {
+                        console.log("dataChannel open");
+                    } else {
+                        console.log("dataChannel closed");
+                    }
+                }
+            };
+          } else {
+            this.pc.ondatachannel = (event : RTCDataChannelEvent) => {
+                this.dataChannel = event.channel;
+                this.dataChannel.onmessage = (event :  MessageEvent<any>) => {
+                    console.log("Message: " + event.data);
+                };
+                this.dataChannel.onopen = (event :  Event) => {
+                    if (this.dataChannel) {
+                
+                        var state = this.dataChannel.readyState;
+                    
+                        if (state === "open") {
+                            console.log("dataChannel open");
+                        } else {
+                            console.log("dataChannel closed");
+                        }
+                    }
+                };
+                this.dataChannel.onclose = (event :  Event) => {
+                    if (this.dataChannel) {
+                
+                        var state = this.dataChannel.readyState;
+                    
+                        if (state === "open") {
+                            console.log("dataChannel open");
+                        } else {
+                            console.log("dataChannel closed");
+                        }
+                    }
+                };
+            }
+          }
 
     }
 
@@ -77,6 +152,7 @@ class RtcConnection {
     public async SendSDP(socket : any, peer : any) { //TODO : FIX any
         await this.createPeerConnection(socket, peer);
 
+
         let offer = await this.pc.createOffer();
         await this.pc.setLocalDescription(offer);
 
@@ -89,6 +165,7 @@ class RtcConnection {
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
         await this.createPeerConnection(socket, remoteOffer.peer, false);
+
 
         await this.pc.setRemoteDescription(remoteOffer.offer);
 
@@ -113,8 +190,6 @@ class RtcConnection {
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
         if (msg.iceCandidate) {
-            console.log("inside", msg.iceCandidate)
-            console.log("receiver", this.pc)
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
             } catch (e) {
@@ -125,12 +200,9 @@ class RtcConnection {
 
     // close a connection with a peer
     public async closeConnection() {
-
+        //TODO
     }
 
-    public async sendMsg(msg: string) {
-
-    }
 }
 
 export default RtcConnection;
