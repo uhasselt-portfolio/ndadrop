@@ -27,6 +27,11 @@ interface Props {
 	peer : any
 }
 
+enum AnswerCallStatus {
+	PENDING,
+	ACCEPTED,
+	REJECTED
+}
 
 const PrivateChat = (props: Props) => {
     // Context
@@ -41,6 +46,8 @@ const PrivateChat = (props: Props) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [sendFiles, setSendFiles] = useState<File[]>([]);
     const [receivedFiles, setReceivedFiles] = useState<File[]>([]);
+
+	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.ACCEPTED : AnswerCallStatus.PENDING);
 
     const videoLocal = createRef();
 	const videoRemote = createRef();
@@ -183,13 +190,13 @@ const PrivateChat = (props: Props) => {
     // setup the rtc connection
 
 	useEffect(() => {
-		// the caller initiates the connection and sends a webrtcRequest 
+		// the caller initiates the connection and sends a webrtcRequest
 		if (props.isCaller) {
 			console.log("caller", props);
 			rtcCon.askForPermission(props.peer, socket);
 		} else {
-			console.log("callee", props);
-			rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
+			// console.log("callee", props);
+			// rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
 		}
 
 		// incoming messages pertaining to the rtc connection
@@ -201,22 +208,66 @@ const PrivateChat = (props: Props) => {
 		handleSdpOffer();
 		handleSdpAnswer();
 		handleIceCandidate();
-		
+
 		// Webcam
 		handleLocalWebcamView();
 		handleRemoteWebcamView();
 
 	}, []);
 
+	// Render
+	const renderAnswerCall = () => {
+
+		const onAccept = () => {
+			setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
+			rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
+		}
+
+		const onReject = () => {
+			setAnswerCallStatus(AnswerCallStatus.REJECTED);
+		}
+
+		return (
+			<div>
+				<h3>You're getting an incoming call</h3>
+				<button onClick={onAccept}>Accept</button>
+				<button onClick={onReject}>Reject</button>
+			</div>
+		)
+	}
+
+	const renderRejectCall = () => {
+		return (
+			<div>
+				<h3>You rejected the call</h3>
+				<button>Go back to home</button>
+			</div>
+		)
+	}
+
+	const renderPrivateChat = () => {
+		return (
+			<div>
+				<h1>Private Chat</h1>
+				{props.chatModes.video && renderVideo()}
+				{props.chatModes.text && renderMessaging()}
+			</div>
+		);
+	}
+
+	const render = () => {
+		return (
+			<div>
+				{answerCallStatus === AnswerCallStatus.PENDING && renderAnswerCall()}
+				{answerCallStatus === AnswerCallStatus.ACCEPTED && renderPrivateChat()}
+				{answerCallStatus === AnswerCallStatus.REJECTED && renderRejectCall()}
+			</div>
+		)
+	}
+
 
 	// render
-    return (
-		<div>
-            <h1>Private Chat</h1>
-			{props.chatModes.video && renderVideo()}
-            {props.chatModes.text && renderMessaging()}
-		</div>
-	);
+    return render();
 
 }
 
