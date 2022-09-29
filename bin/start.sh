@@ -1,1 +1,0 @@
-npx ts-node packages/server/src/index.ts

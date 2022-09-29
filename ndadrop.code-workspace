@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "SSH FS - EDM NDA",
+			"uri": "ssh://edm_nda_server/"
+		}
+	],
+	"settings": {}
+}

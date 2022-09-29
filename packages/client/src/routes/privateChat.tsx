@@ -1,6 +1,5 @@
 import { createRef, h } from 'preact';
-import { useEffect, useState, useRef } from 'preact/hooks';
-import io from 'socket.io-client';
+import { useState } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
 
 type ChatModes = {
@@ -22,7 +21,14 @@ type Message = {
  * @para peer : the peer to initiate the chat with ( TODO : set correct type, but now any because I don't know if it will change)
  * @para socket : the socket to use for the chat
  */
-const PrivateChat = (chatModes : ChatModes, peer : any, socket :  any) => {
+interface Props {
+	chatModes : ChatModes,
+	peer : any,
+	socket : any
+}
+
+
+const PrivateChat = (props: Props) => {
     // state
 	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
 	const [localStream, setLocalStream] = useState<MediaStream>();
