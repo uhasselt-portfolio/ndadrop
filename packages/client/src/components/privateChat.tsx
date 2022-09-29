@@ -1,6 +1,7 @@
 import { createRef, h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useContext } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
+import { SocketContext } from './app';
 
 type ChatModes = {
     text : boolean,
@@ -23,12 +24,14 @@ type Message = {
 interface Props {
 	isCaller : boolean,
 	chatModes : ChatModes,
-	peer : any,
-	socket : any
+	peer : any
 }
 
 
 const PrivateChat = (props: Props) => {
+    // Context
+    const socket = useContext(SocketContext);
+
     // state
 	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
 	const [localStream, setLocalStream] = useState<MediaStream>();
@@ -70,27 +73,27 @@ const PrivateChat = (props: Props) => {
 
 	// WebRTC Handlers
 	const handleIceCandidate = () => {
-		props.socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
 			rtcCon.receiveIceCandidate(message);
 		});
 	}
 
 	const handleSdpOffer = async () => {
-		props.socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(props.socket, remoteOffer);
+		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(socket, remoteOffer);
 		});
 	}
 
 	const handleSdpAnswer = async () => {
-		props.socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(props.socket, answer);
+		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(socket, answer);
 		})
 	}
 
 	const handlePermissionAnswer = async () => {
-		props.socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
 			if(msg.accept) {
-				await rtcCon.SendSDP(props.socket, msg.peer);
+				await rtcCon.SendSDP(socket, msg.peer);
 			}
 		});
 	}
@@ -193,10 +196,10 @@ const PrivateChat = (props: Props) => {
 	// the caller initiates the connection and sends a webrtcRequest 
 	if (props.isCaller) {
 		console.log("caller", props);
-		rtcCon.askForPermission(props.peer, props.socket);
+		rtcCon.askForPermission(props.peer, socket);
 	} else {
 		console.log("callee", props);
-		rtcCon.receivePermissionQuestion({peer : props.peer}, props.socket);
+		rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
 	}
 
 
