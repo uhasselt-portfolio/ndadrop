@@ -71,7 +71,7 @@ class RtcConnection {
         if (isCaller) {
             this.dataChannel = this.pc.createDataChannel("testChannel");
             // when these are not array functions, but member functions of rtcConnection, they don't work
-            // in the browser, when running the this object inside the member functions is a RTCChannel object, 
+            // in the browser, when running the this object inside the member functions is a RTCChannel object,
             // but when writing and compiling the code it thinks it is a rtcConnection object
             this.dataChannel.onmessage = (event :  MessageEvent<any>) => {
                 this.onGetMessage(event.data);
@@ -79,9 +79,9 @@ class RtcConnection {
             // this.dataChannel.onopen = this.handleDataChannelStatusChange;
             this.dataChannel.onopen = (event :  Event) => {
                 if (this.dataChannel) {
-            
+
                     var state = this.dataChannel.readyState;
-                
+
                     if (state === "open") {
                         console.log("dataChannel open");
                     } else {
@@ -91,9 +91,9 @@ class RtcConnection {
             }
             this.dataChannel.onclose = (event :  Event) => {
                 if (this.dataChannel) {
-            
+
                     var state = this.dataChannel.readyState;
-                
+
                     if (state === "open") {
                         console.log("dataChannel open");
                     } else {
@@ -109,9 +109,9 @@ class RtcConnection {
                 };
                 this.dataChannel.onopen = (event :  Event) => {
                     if (this.dataChannel) {
-                
+
                         var state = this.dataChannel.readyState;
-                    
+
                         if (state === "open") {
                             console.log("dataChannel open");
                         } else {
@@ -121,9 +121,9 @@ class RtcConnection {
                 };
                 this.dataChannel.onclose = (event :  Event) => {
                     if (this.dataChannel) {
-                
+
                         var state = this.dataChannel.readyState;
-                    
+
                         if (state === "open") {
                             console.log("dataChannel open");
                         } else {
@@ -143,13 +143,12 @@ class RtcConnection {
     }
 
     // receive a permission request from another peer via the server
-    public async receivePermissionQuestion(msg: any, socket : any) { //TODO : FIX any
+    public async receivePermissionQuestion(msg: any, socket : any, accept: boolean) { //TODO : FIX any
         // check if we want to accept the connection
         const peer = msg.peer;
 
-        const accept = true;
         // if yes, send a permission answer to the server
-        socket.emit('permissionAnswer', {peer : peer, accept :true});
+        socket.emit('permissionAnswer', {peer : peer, accept : accept});
     }
 
     // Send SDP offer to the peer

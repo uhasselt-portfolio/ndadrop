@@ -16,7 +16,7 @@ const Home = () => {
 	const [ownName, setOwnName] = useState<string>("");
 
 	const [privateChatPeer, setPrivateChatPeer] = useState<string>("");
-	const [privateChatisCaller, setPrivateChatisCaller] = useState<boolean>(false);
+	const [privateChatIsCaller, setPrivateChatIsCaller] = useState<boolean>(false);
 
 	// Constructor
 	useEffect(() => {
@@ -48,14 +48,14 @@ const Home = () => {
 	const handlePermissionRequest = async () => {
 		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
 			setIsInPrivateChat(true);
-			setPrivateChatisCaller(false);
+			setPrivateChatIsCaller(false);
 			setPrivateChatPeer(msg.peer);
 		});
 	}
 
 	// Events
 	const onDirectChatInitiate = (member: any) => {
-		setPrivateChatisCaller(true);
+		setPrivateChatIsCaller(true);
 		setPrivateChatPeer(member);
 		setIsInPrivateChat(true);
 	}
@@ -72,7 +72,7 @@ const Home = () => {
 	const renderPrivateChat = () => {
 		return (
 			<div>
-				<PrivateChat isCaller={privateChatisCaller} chatModes={{video: true, text : true}} peer={privateChatPeer}/>
+				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer}/>
 			</div>
 		)
 	}
