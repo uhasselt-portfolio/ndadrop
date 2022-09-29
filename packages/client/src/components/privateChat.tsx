@@ -169,14 +169,29 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const renderTransferedFiles = () => {
-
+		return (
+			<div>
+				<h3>Received files</h3>
+				{/* {renderReceivedFiles()} */}
+				<h3>Sent files</h3>
+				{/* {renderSendFiles()} */}
+			</div>
+		)
 	}
 
 
     // setup the rtc connection
 
 	useEffect(() => {
-		console.log("useEffect");
+		// the caller initiates the connection and sends a webrtcRequest 
+		if (props.isCaller) {
+			console.log("caller", props);
+			rtcCon.askForPermission(props.peer, socket);
+		} else {
+			console.log("callee", props);
+			rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
+		}
+
 		// incoming messages pertaining to the rtc connection
 		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
 		// sdpOffer : the sdpOffer information from a peer
@@ -192,15 +207,6 @@ const PrivateChat = (props: Props) => {
 		handleRemoteWebcamView();
 
 	}, []);
-
-	// the caller initiates the connection and sends a webrtcRequest 
-	if (props.isCaller) {
-		console.log("caller", props);
-		rtcCon.askForPermission(props.peer, socket);
-	} else {
-		console.log("callee", props);
-		rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
-	}
 
 
 	// render
