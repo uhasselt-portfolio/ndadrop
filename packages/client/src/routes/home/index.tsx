@@ -2,9 +2,12 @@ import { createRef, h } from 'preact';
 import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
 import RtcConnection from '../../api/RtcConnection';
+import { route } from 'preact-router';
+import PrivateChat from '../privateChat';
+
 const Home = () => {
 
-	const socket = io('http://localhost:3000', {
+	const socket = io('http://localhost:9005', {
 		transports: ['websocket'],
 	});
 
@@ -125,6 +128,8 @@ const Home = () => {
 	}
 
 	const onDirectChatInitiate = (member: any) => {
+		setIsInPrivateChat(true);
+		route("/privateChat");
 		rtcCon.askForPermission(member, socket);
 	}
 
@@ -183,7 +188,7 @@ const Home = () => {
 		);
 	}
 
-	return (
+	const renderHomeScreen = () => {
 		<div>
 			<h1>Dropper</h1>
 			<h3>Friends who're online:</h3>
@@ -198,6 +203,17 @@ const Home = () => {
 			<hr />
 			{renderMessages()}
 			{renderVideo()}
+		</div>
+	}
+
+	const renderPrivateChat = () => {
+		return  <PrivateChat chatModes={} peer={} socket={} />;
+	}
+
+	return (
+		<div>
+			{isInPrivateChat && renderPrivateChat()}
+			{!isInPrivateChat && renderHomeScreen()}
 		</div>
 	);
 }
