@@ -8,75 +8,106 @@ const Home = () => {
 		transports: ['websocket'],
 	});
 
-
 	// Stream
 	const [localStream, setLocalStream] = useState<MediaStream>();
 	const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
 
-	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
-
-	rtcCon.onLocalStreamSet = (stream: MediaStream) => {
-		setLocalStream(stream);
-	}
-
-	rtcCon.onRemoteStreamSet = (stream: MediaStream) => {
-		setRemoteStream(stream);
-	}
-
+	const [rtcCon] = useState<RtcConnection>(new RtcConnection());
 
 	// State
 	const [members, setMembers] = useState<string[]>([]);
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
+	const [isInPrivateChat, setIsInPrivateChat] = useState<boolean>(false);
+
+	// Refs
 	const videoLocal = createRef();
 	const videoRemote = createRef();
 
+	// Constructor
 	useEffect(() => {
-		socket.emit('join');
 
+		// Sockets
+		sendJoinSignal();
+		handleMembersChange();
+		handleChatSend()
+
+		// Webcam
+		handleLocalWebcamView();
+		handleRemoteWebcamView();
+
+		// WebRTC
+		handlePermissionRequest();
+		handlePermissionAnswer();
+		handleSdpOffer();
+		handleSdpAnswer();
+		handleIceCandidate();
+	}, []);
+
+	// Socket handlers
+	const sendJoinSignal = () => {
+		socket.emit('join');
+	}
+
+	const handleMembersChange = () => {
 		socket.on('members', (members) => {
 			setMembers(members);
 		});
 
+	}
+
+	const handleChatSend = () => {
 		socket.on('chat', (message: string) => {
 			setMessages(m => [...m, message]);
 		});
+	}
 
-		// TODO : sdp should be exchanged now
-		//        => nu nog ICE candidates
-		// ICE candidates are only done when connecting a media stream
-		// for example without specifing a video stream it does not work, with a video stream like jori it does
+	// WebRTC Handlers
+	const handleIceCandidate = () => {
+		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+			rtcCon.receiveIceCandidate(message);
+		});
+	}
 
-		// incoming messages pertaining to the rtc connection
-		// RTCPermissionRequest : an incoming request to start a rtc connection
-		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
-		// sdpOffer : the sdpOffer information from a peer
-		// sdpAnswer : the sdpAnswer information from a peer
-		// iceCandidate : an iceCandidate from a peer
+	const handleSdpOffer = async () => {
+		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+			rtcCon.sendSDPAnswer(socket, remoteOffer);
+		});
+	}
+
+	const handleSdpAnswer = async () => {
+		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+			rtcCon.handleSdpAnswer(socket, answer);
+		})
+	}
+
+	const handlePermissionRequest = async () => {
 		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
 			rtcCon.receivePermissionQuestion(msg, socket);
 		});
+	}
 
+	const handlePermissionAnswer = async () => {
 		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
             if(msg.accept) {
                 await rtcCon.SendSDP(socket, msg.peer);
             }
         });
+	}
 
-		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(socket, remoteOffer);
-		});
+	// Webcam
+	const handleLocalWebcamView = () => {
+		rtcCon.onLocalStreamSet = (stream: MediaStream) => {
+			setLocalStream(stream);
+		}
+	}
 
-		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(socket, answer);
-		})
-
-		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-			rtcCon.receiveIceCandidate(message);
-		});
-
-	}, []);
+	const handleRemoteWebcamView = () => {
+		rtcCon.onRemoteStreamSet = (stream: MediaStream) => {
+			setRemoteStream(stream);
+		}
+	}
 
 	// Events
 	const onChatSend = (e: any) => {
