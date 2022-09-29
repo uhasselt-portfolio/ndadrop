@@ -37,7 +37,7 @@ const MemberList = (props: Props) => {
     const render = () => {
         return (
             <div>
-                <h1>Members</h1>
+                <h3>Friends who're online</h3>
                 <ul>{renderMembers()}</ul>
             </div>
         );
