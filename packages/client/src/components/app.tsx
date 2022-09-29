@@ -3,7 +3,7 @@ import { Route, Router } from 'preact-router';
 
 // Code-splitting is automated for `routes` directory
 import Home from '../routes/home';
-import PrivateChat from '../routes/privateChat';
+import PrivateChat from './privateChat';
 
 const App = () => (
 	<div id="app">

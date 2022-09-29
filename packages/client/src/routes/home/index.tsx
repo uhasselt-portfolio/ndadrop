@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'preact/hooks';
 import io from 'socket.io-client';
 import RtcConnection from '../../api/RtcConnection';
 import { route } from 'preact-router';
-import PrivateChat from '../privateChat';
+import PrivateChat from '../../components/privateChat';
 
 const Home = () => {
 
@@ -20,9 +20,13 @@ const Home = () => {
 
 	// State
 	const [members, setMembers] = useState<string[]>([]);
+	const [name, setName] = useState<string>("");
 	const [message, setMessage] = useState<string>("");
 	const [messages, setMessages] = useState<string[]>([]);
 	const [isInPrivateChat, setIsInPrivateChat] = useState<boolean>(false);
+
+	const [privateChatPeer, setPrivateChatPeer] = useState<string>("");
+	const [privateChatisCaller, setPrivateChatisCaller] = useState<boolean>(false);
 
 	// Refs
 	const videoLocal = createRef();
@@ -33,6 +37,7 @@ const Home = () => {
 
 		// Sockets
 		sendJoinSignal();
+		handleNameGet();
 		handleMembersChange();
 		handleChatSend()
 
@@ -42,15 +47,21 @@ const Home = () => {
 
 		// WebRTC
 		handlePermissionRequest();
-		handlePermissionAnswer();
-		handleSdpOffer();
-		handleSdpAnswer();
-		handleIceCandidate();
+		// handlePermissionAnswer();
+		// handleSdpOffer();
+		// handleSdpAnswer();
+		// handleIceCandidate();
 	}, []);
 
 	// Socket handlers
 	const sendJoinSignal = () => {
 		socket.emit('join');
+	}
+
+	const handleNameGet = () => {
+		socket.on('name', (name : string) => {
+			setName(name);
+		});
 	}
 
 	const handleMembersChange = () => {
@@ -67,37 +78,41 @@ const Home = () => {
 	}
 
 	// WebRTC Handlers
-	const handleIceCandidate = () => {
-		socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
-			rtcCon.receiveIceCandidate(message);
-		});
-	}
+	// const handleIceCandidate = () => {
+	// 	socket.on('icecandidate', async (message : {iceCandidate : RTCIceCandidate, peer : any}) => {
+	// 		rtcCon.receiveIceCandidate(message);
+	// 	});
+	// }
 
-	const handleSdpOffer = async () => {
-		socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
-			rtcCon.sendSDPAnswer(socket, remoteOffer);
-		});
-	}
+	// const handleSdpOffer = async () => {
+	// 	socket.on('sdpOffer', async(remoteOffer : {peer : any, offer : RTCSessionDescription}) => {
+	// 		rtcCon.sendSDPAnswer(socket, remoteOffer);
+	// 	});
+	// }
 
-	const handleSdpAnswer = async () => {
-		socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
-			rtcCon.handleSdpAnswer(socket, answer);
-		})
-	}
+	// const handleSdpAnswer = async () => {
+	// 	socket.on('sdpAnswer', (answer : {peer : any, answer : RTCSessionDescription}) => {
+	// 		rtcCon.handleSdpAnswer(socket, answer);
+	// 	})
+	// }
 
 	const handlePermissionRequest = async () => {
+		// TODO : moet anders, moet de chat pagina aanmaken en dan doorverwijzen
 		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
-			rtcCon.receivePermissionQuestion(msg, socket);
+			setIsInPrivateChat(true);
+			setPrivateChatisCaller(false);
+			setPrivateChatPeer(msg.peer);
+			// rtcCon.receivePermissionQuestion(msg, socket);
 		});
 	}
 
-	const handlePermissionAnswer = async () => {
-		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
-            if(msg.accept) {
-                await rtcCon.SendSDP(socket, msg.peer);
-            }
-        });
-	}
+	// const handlePermissionAnswer = async () => {
+	// 	socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
+    //         if(msg.accept) {
+    //             await rtcCon.SendSDP(socket, msg.peer);
+    //         }
+    //     });
+	// }
 
 	// Webcam
 	const handleLocalWebcamView = () => {
@@ -128,20 +143,22 @@ const Home = () => {
 	}
 
 	const onDirectChatInitiate = (member: any) => {
+		setPrivateChatisCaller(true);
+		setPrivateChatPeer(member);
 		setIsInPrivateChat(true);
-		route("/privateChat");
-		rtcCon.askForPermission(member, socket);
+		// rtcCon.askForPermission(member, socket);
 	}
 
 	// Render
 	const renderMembers = () => {
 		return members.map((member: any) => {
-			return (
-				<li>
-					{member}
-					<button onClick={() => onDirectChatInitiate(member)}>DirectChat</button>
-				</li>
-			);
+			if (member !== name)
+				return (
+					<li>
+						{member}
+						<button onClick={() => onDirectChatInitiate(member)}>DirectChat</button>
+					</li>
+				);
 		});
 	}
 
@@ -189,29 +206,31 @@ const Home = () => {
 	}
 
 	const renderHomeScreen = () => {
-		<div>
-			<h1>Dropper</h1>
-			<h3>Friends who're online:</h3>
-			<p>{renderMembers()}</p>
-			<h3>Chat with friends:</h3>
-			<input
-				onChange={(e) => onTyping(e)}
-				value={message}
-				type="text"
-			/>
-			<button onClick={onChatSend}>Send</button>
-			<hr />
-			{renderMessages()}
-			{renderVideo()}
-		</div>
+		return (
+			<div>
+				<h3>Friends who're online:</h3>
+				<p>{renderMembers()}</p>
+				<h3>Chat with friends:</h3>
+				<input
+					onChange={(e) => onTyping(e)}
+					value={message}
+					type="text"
+				/>
+				<button onClick={onChatSend}>Send</button>
+				<hr />
+				{renderMessages()}
+				{renderVideo()}
+			</div>
+		)
 	}
 
 	const renderPrivateChat = () => {
-		return  <PrivateChat chatModes={} peer={} socket={} />;
+		return  <PrivateChat isCaller={privateChatisCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} socket={socket} />;
 	}
 
 	return (
 		<div>
+			<h1>Dropper</h1>
 			{isInPrivateChat && renderPrivateChat()}
 			{!isInPrivateChat && renderHomeScreen()}
 		</div>

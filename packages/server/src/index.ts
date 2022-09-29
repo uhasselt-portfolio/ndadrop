@@ -50,6 +50,8 @@ io.on('connection', (socket) => {
 
 		socket.join(room.getRoomId());
 		io.to(room.getRoomId()).emit('members', room.getMembers());
+		// send the assigned name of the client to the clinet
+		socket.emit('name', shortName);
 	});
 
 	socket.on('chat', (msg) => {
@@ -68,7 +70,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		// console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
+		console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -84,7 +86,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		// console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
+		console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
 
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
