@@ -3,11 +3,10 @@ import cors from 'cors';
 import express from "express";
 import http from 'http';
 import { Server } from "socket.io";
+import { adjectives, animals, uniqueNamesGenerator } from 'unique-names-generator';
 import { config } from "./config";
 import RoomService from "./services/room.service";
 import FingerprintUtil from "./utils/fingerprint.util";
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
-import { SocketAddress } from "net";
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +14,7 @@ const io = new Server(server);
 
 app.use(cookieParser());
 app.use(cors());
-
+app.use(express.static('public'))
 
 
 // Instances
@@ -62,7 +61,7 @@ io.on('connection', (socket) => {
 	socket.on('directChat', (msg) => {
 		console.log("trying to send direct chat to: " + msg.to);
 		console.log("from " + msg.from);
-		
+
 	});
 
 	socket.on('askRTCPermission', (msg : {peer : any, msg : string}) => {
@@ -73,7 +72,7 @@ io.on('connection', (socket) => {
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
-		
+
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
@@ -86,7 +85,7 @@ io.on('connection', (socket) => {
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
 		// console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
-		
+
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
@@ -102,7 +101,7 @@ io.on('connection', (socket) => {
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
-		
+
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
@@ -118,7 +117,7 @@ io.on('connection', (socket) => {
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
-		
+
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
@@ -134,7 +133,7 @@ io.on('connection', (socket) => {
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
-		
+
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
