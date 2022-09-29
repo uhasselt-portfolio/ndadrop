@@ -137,13 +137,12 @@ class RtcConnection {
     }
 
     // receive a permission request from another peer via the server
-    public async receivePermissionQuestion(msg: any, socket : any) { //TODO : FIX any
+    public async receivePermissionQuestion(msg: any, socket : any, accept: boolean) { //TODO : FIX any
         // check if we want to accept the connection
         const peer = msg.peer;
 
-        const accept = true;
         // if yes, send a permission answer to the server
-        socket.emit('permissionAnswer', {peer : peer, accept :true});
+        socket.emit('permissionAnswer', {peer : peer, accept : accept});
     }
 
     // Send SDP offer to the peer

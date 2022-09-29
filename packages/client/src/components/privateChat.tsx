@@ -220,11 +220,12 @@ const PrivateChat = (props: Props) => {
 
 		const onAccept = () => {
 			setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
-			rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
+			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, true);
 		}
 
 		const onReject = () => {
 			setAnswerCallStatus(AnswerCallStatus.REJECTED);
+			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, false);
 		}
 
 		return (
