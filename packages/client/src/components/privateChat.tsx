@@ -8,9 +8,17 @@ type ChatModes = {
     video : boolean
 }
 
+
+type MessageType = {
+	text : boolean,
+	file : boolean
+}
+
 type Message = {
+	type : MessageType,
     message : string,
-    own : boolean
+    own : boolean,
+
 }
 
 /*
@@ -55,8 +63,10 @@ const PrivateChat = (props: Props) => {
     // functions
     const onChatSend = (e: any) => {
 		e.preventDefault();
-		setMessage("");
 		rtcCon.sendMessageThroughDataChannel(message);
+		setMessages(m => [...m, {type: {text : true, file : false}, message : message, own : true}]);
+		setMessage("");
+		console.log("Sent message : " + message);
 	}
 
 	const onTyping = (e: any) => {
@@ -66,7 +76,8 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const onGetMessage = (name: string) => {
-		console.log("onGetMessage : " + name);
+		console.log("Got message : " + name, messages);
+		setMessages(m => [...m, {type: {text : true, file : false}, message : name, own : false}]);
 	}
 
     const onGetFile = (name: string) => {
@@ -115,8 +126,9 @@ const PrivateChat = (props: Props) => {
 
 	// Render functions
     const renderMessages = () => {
+		console.log(messages);
 
-		if (messages.length === 0  && messages.length === 0) {
+		if (messages.length === 0) {
 			return (
 				<li>
 					Be the first one to say something!
