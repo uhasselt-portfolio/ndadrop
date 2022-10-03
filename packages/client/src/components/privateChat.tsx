@@ -2,6 +2,16 @@ import { createRef, h } from 'preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from './app';
+import FileUpload from './fileUpload';
+
+const downloadFile = (file: File) => {
+	console.log("downloading file", file);
+	let url = window.URL.createObjectURL(file);
+	let a = document.createElement('a');
+	a.href = url;
+	a.download = file.name;
+	a.click();
+}
 
 type ChatModes = {
     text : boolean,
@@ -18,17 +28,9 @@ type Message = {
 	type : MessageType,
     message : string,
     own : boolean,
-
+	file : File | null
 }
 
-/*
- * The page for a one-on-one chat with another user
- * Can be used to initiate a normal message char or a video chat
- * The caller goes to this page and the callee is redirected to this page accepting the call
- * @para chatModes : the mode to initiate the chat in
- * @para peer : the peer to initiate the chat with ( TODO : set correct type, but now any because I don't know if it will change)
- * @para socket : the socket to use for the chat
- */
 interface Props {
 	isCaller : boolean,
 	chatModes : ChatModes,
@@ -41,6 +43,14 @@ enum AnswerCallStatus {
 	REJECTED
 }
 
+/*
+ * The page for a one-on-one chat with another user
+ * Can be used to initiate a normal message char or a video chat
+ * The caller goes to this page and the callee is redirected to this page accepting the call
+ * @para chatModes : the mode to initiate the chat in
+ * @para peer : the peer to initiate the chat with ( TODO : set correct type, but now any because I don't know if it will change)
+ * @para isCaller : a boolean indicating if the user is the caller or the callee
+ */
 const PrivateChat = (props: Props) => {
     // Context
     const socket = useContext(SocketContext);
@@ -52,8 +62,7 @@ const PrivateChat = (props: Props) => {
 
     const [message, setMessage] = useState<string>("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const [sendFiles, setSendFiles] = useState<File[]>([]);
-    const [receivedFiles, setReceivedFiles] = useState<File[]>([]);
+	const [choosingFile, setChoosingFile] = useState<boolean>(false);
 
 	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.ACCEPTED : AnswerCallStatus.PENDING);
 
@@ -64,7 +73,7 @@ const PrivateChat = (props: Props) => {
     const onChatSend = (e: any) => {
 		e.preventDefault();
 		rtcCon.sendMessageThroughDataChannel(message);
-		setMessages(m => [...m, {type: {text : true, file : false}, message : message, own : true}]);
+		setMessages(m => [...m, {type: {text : true, file : false}, message : "fileName", file : e, own : true}]);
 		setMessage("");
 		console.log("Sent message : " + message);
 	}
@@ -77,11 +86,22 @@ const PrivateChat = (props: Props) => {
 
 	const onGetMessage = (name: string) => {
 		console.log("Got message : " + name, messages);
-		setMessages(m => [...m, {type: {text : true, file : false}, message : name, own : false}]);
+		setMessages(m => [...m, {type: {text : true, file : false}, message : name, file: null , own : false}]);
 	}
 
-    const onGetFile = (name: string) => {
-		
+	const onGetFile = (e : File) => {
+		console.log("Got file : ", e);
+
+		setMessages(m => [...m, {type: {text : false, file : true}, message : e.name, file : e, own : false}]);
+	}
+
+    const sendFile = (File : File) => {
+		console.log("Sending file : ", File);
+
+		// Send the file through the data channel
+		rtcCon.sendFileThroughDataChannel(File);
+
+		return true
 	}
 
 	// Webcam
@@ -126,8 +146,6 @@ const PrivateChat = (props: Props) => {
 
 	// Render functions
     const renderMessages = () => {
-		console.log(messages);
-
 		if (messages.length === 0) {
 			return (
 				<li>
@@ -151,10 +169,33 @@ const PrivateChat = (props: Props) => {
             )
         }
 
+		const renderFile = (message : Message) => {
+			if (! message.file)
+				return;
+            if (message.own)
+                return (
+					<div>
+                    	<div style="color:blue;">
+							{message.message}
+						</div>
+						<button onClick={() => {if (message.file) downloadFile(message.file)}}>Download</button>
+                    </div>
+                )
+
+            return (
+				<div>
+					<div style="color:blue;">
+						{message.message}
+					</div>
+					<button onClick={() => {if (message.file) downloadFile(message.file)}}>Download</button>
+				</div>
+            )
+		}
+
 		return messages.map((message: Message) => {
 			return (
 				<li>
-					{renderMessage(message)}
+					{message.type.text ? renderMessage(message) : renderFile(message)}
 				</li>
 			);
 		});
@@ -184,12 +225,20 @@ const PrivateChat = (props: Props) => {
 	const renderMessaging = () => {
 		return(
 			<div>
-				<input
-				onChange={(e) => onTyping(e)}
-				value={message}
-				type="text"
-				/>
-				<button onClick={onChatSend}>Send</button>
+				{! choosingFile && 
+					<div>
+						<input
+						onChange={(e) => onTyping(e)}
+						value={message}
+						type="text"
+						/>
+						<button onClick={onChatSend}>Send</button>
+						<button onClick={() => setChoosingFile(true)}>Send file</button>
+					</div>
+				}
+
+				{choosingFile && <FileUpload uploadFile={sendFile} /> }
+				{choosingFile && <button onClick={() => setChoosingFile(false)}>Cancel</button>}
 				{renderMessages()}
 			</div>
 		)
@@ -215,7 +264,6 @@ const PrivateChat = (props: Props) => {
 
 		// the caller initiates the connection and sends a webrtcRequest 
 		if (props.isCaller) {
-			console.log("caller", props);
 			rtcCon.askForPermission(props.peer, socket);
 		} else {
 			// console.log("callee", props);
