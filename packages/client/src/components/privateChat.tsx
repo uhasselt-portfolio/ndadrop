@@ -88,7 +88,6 @@ const PrivateChat = (props: Props) => {
 			own: false,
 			payload: name
 		}])
-		// setMessages(m => [...m, {type: {text : true, file : false}, message : name, file: null , own : false}]);
 	}
 
 	const onGetFile = (e : File) => {
@@ -99,7 +98,6 @@ const PrivateChat = (props: Props) => {
 			own: false,
 			payload: e
 		}]);
-		// setMessages(m => [...m, {type: {text : false, file : true}, message : e.name, file : e, own : false}]);
 	}
 
     const sendFile = (File : File) => {
@@ -183,7 +181,7 @@ const PrivateChat = (props: Props) => {
 			return (
 				<div>
 					<div style={style}>
-						{message.payload}
+						File: {message.payload.name}
 					</div>
 					<button onClick={() => {downloadFile(message.payload)}}>Download</button>
 				</div>

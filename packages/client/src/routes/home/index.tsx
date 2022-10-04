@@ -4,6 +4,9 @@ import { SocketContext } from '../../components/app';
 import MemberList from '../../components/member-list';
 import PrivateChat from '../../components/privateChat';
 
+// Tailwind
+// https://fuadnafiz98.hashnode.dev/configuring-preact-with-tailwind-css
+
 const Home = () => {
 
 	// Context
@@ -63,8 +66,8 @@ const Home = () => {
 	// Render
 	const renderHomeScreen = () => {
 		return(
-			<div>
-				<h1>Dropper</h1>
+			<div class="flex flex-col w-full border border-red-300 gap-3 pt-3">
+				<div class="text-gray-800 text-3xl flex justify-center">Not Messenger</div>
 				<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
 			</div>
 		)
@@ -79,7 +82,7 @@ const Home = () => {
 
 	const render = () => {
 		return(
-			<div>
+			<div className="flex bg-slate-200 relative">
 				{!isInPrivateChat && renderHomeScreen()}
 				{isInPrivateChat && renderPrivateChat()}
 			</div>

@@ -1,6 +1,5 @@
 import { h } from 'preact';
 import { useContext, useState } from "preact/hooks";
-import { Socket } from "socket.io-client";
 import { SocketContext } from './app';
 
 interface Props {
@@ -36,8 +35,8 @@ const MemberList = (props: Props) => {
 
     const render = () => {
         return (
-            <div>
-                <h3>Friends who're online</h3>
+            <div class="flex flex-col bg-white p-7 mx-32 my-8 rounded-lg">
+                <div class="flex text-xl justify-center">Friends who're online</div>
                 <ul>{renderMembers()}</ul>
             </div>
         );
