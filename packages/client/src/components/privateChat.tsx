@@ -71,7 +71,6 @@ const PrivateChat = (props: Props) => {
 		e.preventDefault();
 		rtcCon.sendMessageThroughDataChannel(message);
 		setMessages(m => [...m, {type : "text", payload : message, own : true}]);
-		// setMessages(m => [...m, {type: {text : true, file : false}, message : "fileName", file : e, own : true}]);
 		setMessage("");
 		console.log("Sent message : " + message);
 	}
