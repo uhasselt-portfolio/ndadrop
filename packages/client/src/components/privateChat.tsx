@@ -18,17 +18,14 @@ type ChatModes = {
     video : boolean
 }
 
-
-type MessageType = {
-	text : boolean,
-	file : boolean
-}
-
 type Message = {
-	type : MessageType,
-    message : string,
+	type : "text",
+	payload: string
     own : boolean,
-	file : File | null
+} | {
+	type : "file",
+	payload: File,
+	own : boolean,
 }
 
 interface Props {
@@ -73,7 +70,8 @@ const PrivateChat = (props: Props) => {
     const onChatSend = (e: any) => {
 		e.preventDefault();
 		rtcCon.sendMessageThroughDataChannel(message);
-		setMessages(m => [...m, {type: {text : true, file : false}, message : "fileName", file : e, own : true}]);
+		setMessages(m => [...m, {type : "text", payload : message, own : true}]);
+		// setMessages(m => [...m, {type: {text : true, file : false}, message : "fileName", file : e, own : true}]);
 		setMessage("");
 		console.log("Sent message : " + message);
 	}
@@ -86,13 +84,23 @@ const PrivateChat = (props: Props) => {
 
 	const onGetMessage = (name: string) => {
 		console.log("Got message : " + name, messages);
-		setMessages(m => [...m, {type: {text : true, file : false}, message : name, file: null , own : false}]);
+		setMessages(m => [...m, {
+			type: "text",
+			own: false,
+			payload: name
+		}])
+		// setMessages(m => [...m, {type: {text : true, file : false}, message : name, file: null , own : false}]);
 	}
 
 	const onGetFile = (e : File) => {
 		console.log("Got file : ", e);
 
-		setMessages(m => [...m, {type: {text : false, file : true}, message : e.name, file : e, own : false}]);
+		setMessages(m => [...m, {
+			type: "file",
+			own: false,
+			payload: e
+		}]);
+		// setMessages(m => [...m, {type: {text : false, file : true}, message : e.name, file : e, own : false}]);
 	}
 
     const sendFile = (File : File) => {
@@ -155,47 +163,38 @@ const PrivateChat = (props: Props) => {
 		}
 
         const renderMessage = (message : Message) => {
-            if (message.own)
-                return (
-                    <div style="color:blue;">
-                        {message.message}
-                    </div>
-                )
+			if (message.type === "file") return null;
 
-            return (
-                <div style="color:red;">
-                    {message.message}
-                </div>
-            )
+			const isOwn = message.own;
+			const style = isOwn ? "color:blue;" : "color:red;";
+
+			return (
+				<div style={style}>
+					{message.payload}
+				</div>
+			)
         }
 
 		const renderFile = (message : Message) => {
-			if (! message.file)
-				return;
-            if (message.own)
-                return (
-					<div>
-                    	<div style="color:blue;">
-							{message.message}
-						</div>
-						<button onClick={() => {if (message.file) downloadFile(message.file)}}>Download</button>
-                    </div>
-                )
+			if (message.type === "text") return null;
 
-            return (
+			const isOwn = message.own;
+			const style = isOwn ? "color:blue;" : "color:red;";
+
+			return (
 				<div>
-					<div style="color:blue;">
-						{message.message}
+					<div style={style}>
+						{message.payload}
 					</div>
-					<button onClick={() => {if (message.file) downloadFile(message.file)}}>Download</button>
+					<button onClick={() => {downloadFile(message.payload)}}>Download</button>
 				</div>
-            )
+			)
 		}
 
 		return messages.map((message: Message) => {
 			return (
 				<li>
-					{message.type.text ? renderMessage(message) : renderFile(message)}
+					{message.type === "text" ? renderMessage(message) : renderFile(message)}
 				</li>
 			);
 		});
@@ -222,10 +221,19 @@ const PrivateChat = (props: Props) => {
 		);
 	}
 
+	const renderFilePicker = () => {
+		return(
+			<div>
+				<FileUpload uploadFile={sendFile} />
+				<button onClick={() => setChoosingFile(false)}>Cancel</button>
+			</div>
+		)
+	}
+
 	const renderMessaging = () => {
 		return(
 			<div>
-				{! choosingFile && 
+				{! choosingFile &&
 					<div>
 						<input
 						onChange={(e) => onTyping(e)}
@@ -237,8 +245,7 @@ const PrivateChat = (props: Props) => {
 					</div>
 				}
 
-				{choosingFile && <FileUpload uploadFile={sendFile} /> }
-				{choosingFile && <button onClick={() => setChoosingFile(false)}>Cancel</button>}
+				{choosingFile && renderFilePicker()}
 				{renderMessages()}
 			</div>
 		)
@@ -262,7 +269,7 @@ const PrivateChat = (props: Props) => {
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
 
-		// the caller initiates the connection and sends a webrtcRequest 
+		// the caller initiates the connection and sends a webrtcRequest
 		if (props.isCaller) {
 			rtcCon.askForPermission(props.peer, socket);
 		} else {
