@@ -2,6 +2,7 @@ import { createRef, h } from 'preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from '../pages/App';
+import Button from './Button';
 import FileUpload from './FileUpload';
 
 type ChatModes = {
@@ -302,10 +303,12 @@ const PrivateChat = (props: Props) => {
 		}
 
 		return (
-			<div>
-				<h3>You're getting an incoming call</h3>
-				<button onClick={onAccept}>Accept</button>
-				<button onClick={onReject}>Reject</button>
+			<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg items-center gap-3'>
+				<div class='italic text-gray-700'>You're getting an incoming call...</div>
+				<div class='flex flex-row gap-10'>
+					<Button size='sm' type='primary-dark-2' onClick={onAccept}>Accept</Button>
+					<Button size='sm' type='danger' onClick={onReject}>Reject</Button>
+				</div>
 			</div>
 		)
 	}
@@ -331,7 +334,7 @@ const PrivateChat = (props: Props) => {
 
 	const render = () => {
 		return (
-			<div>
+			<div class='flex justify-center'>
 				{answerCallStatus === AnswerCallStatus.PENDING && renderAnswerCall()}
 				{answerCallStatus === AnswerCallStatus.ACCEPTED && renderPrivateChat()}
 				{answerCallStatus === AnswerCallStatus.REJECTED && renderRejectCall()}
