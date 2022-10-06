@@ -28,7 +28,8 @@ interface Props {
 }
 
 enum AnswerCallStatus {
-	PENDING,
+	PENDING, // Callee waiting to accept
+	WAITING, // Caller waiting for callee to accept
 	ACCEPTED,
 	REJECTED
 }
@@ -54,7 +55,7 @@ const PrivateChat = (props: Props) => {
     const [messages, setMessages] = useState<Message[]>([]);
 	const [choosingFile, setChoosingFile] = useState<boolean>(false);
 
-	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.ACCEPTED : AnswerCallStatus.PENDING);
+	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.WAITING : AnswerCallStatus.PENDING);
 
     const videoLocal = createRef();
 	const videoRemote = createRef();
@@ -143,7 +144,10 @@ const PrivateChat = (props: Props) => {
 	const handlePermissionAnswer = async () => {
 		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
 			if(msg.accept) {
+				setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
 				await rtcCon.SendSDP(socket, msg.peer);
+			} else {
+				setAnswerCallStatus(AnswerCallStatus.REJECTED);
 			}
 		});
 	}
@@ -313,6 +317,14 @@ const PrivateChat = (props: Props) => {
 		)
 	}
 
+	const renderWaitingForAnswer = () => {
+		return (
+			<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg items-center gap-3'>
+				<div class='italic text-gray-700'>Waiting for answer...</div>
+			</div>
+		)
+	}
+
 	const renderRejectCall = () => {
 		return (
 			<div>
@@ -335,6 +347,7 @@ const PrivateChat = (props: Props) => {
 	const render = () => {
 		return (
 			<div class='flex justify-center'>
+				{answerCallStatus === AnswerCallStatus.WAITING && renderWaitingForAnswer()}
 				{answerCallStatus === AnswerCallStatus.PENDING && renderAnswerCall()}
 				{answerCallStatus === AnswerCallStatus.ACCEPTED && renderPrivateChat()}
 				{answerCallStatus === AnswerCallStatus.REJECTED && renderRejectCall()}
