@@ -7,6 +7,7 @@
     "build": "preact build --no-prerender --dest ../server/public",
     "serve": "sirv build --cors --single --p 8005",
     "dev": "preact watch --p 8005",
+    "dev-ui": "npx tailwindcss -i src/style/tailwind.css -c tailwind.config.js -o src/style/index.css --watch",
     "lint": "eslint src"
   },
   "dependencies": {

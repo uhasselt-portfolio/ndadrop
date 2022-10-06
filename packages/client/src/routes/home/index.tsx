@@ -66,7 +66,7 @@ const Home = () => {
 	// Render
 	const renderHomeScreen = () => {
 		return(
-			<div class="flex flex-col w-full border border-red-300 gap-3 pt-3">
+			<div class="flex flex-col w-full border border-red-500 gap-3 pt-3">
 				<div class="text-gray-800 text-3xl flex justify-center">Not Messenger</div>
 				<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
 			</div>
@@ -74,7 +74,7 @@ const Home = () => {
 	}
 	const renderPrivateChat = () => {
 		return (
-			<div>
+			<div class="flex flex-col w-full border border-red-500 gap-3 pt-3">
 				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer}/>
 			</div>
 		)
