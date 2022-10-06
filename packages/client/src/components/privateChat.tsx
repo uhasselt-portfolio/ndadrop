@@ -4,12 +4,12 @@ import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from './app';
 import FileUpload from './fileUpload';
 
-const downloadFile = (file: File) => {
-	console.log("downloading file", file);
-	let url = window.URL.createObjectURL(file);
+const downloadFile = (message: Message) => {
+	if (message.type != 'file') return;
+	let url = message.fileData;
 	let a = document.createElement('a');
 	a.href = url;
-	a.download = file.name;
+	a.download = message.fileName;
 	a.click();
 }
 
@@ -24,7 +24,8 @@ type Message = {
     own : boolean,
 } | {
 	type : "file",
-	payload: File,
+	fileData: string,
+	fileName: string,
 	own : boolean,
 }
 
@@ -90,13 +91,13 @@ const PrivateChat = (props: Props) => {
 		}])
 	}
 
-	const onGetFile = (e : File) => {
-		console.log("Got file : ", e);
+	const onGetFile = (fileData : string, fileName : string) => {
 
 		setMessages(m => [...m, {
 			type: "file",
 			own: false,
-			payload: e
+			fileData: fileData,
+			fileName: fileName
 		}]);
 	}
 
@@ -181,9 +182,9 @@ const PrivateChat = (props: Props) => {
 			return (
 				<div>
 					<div style={style}>
-						File: {message.payload.name}
+						File: {message.fileName}
 					</div>
-					<button onClick={() => {downloadFile(message.payload)}}>Download</button>
+					<button onClick={() => {downloadFile(message)}}>Download</button>
 				</div>
 			)
 		}

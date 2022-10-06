@@ -14,11 +14,6 @@ type FileMessage = {
     data: string;
 }
 
-// TODO: FILETRANSFER
-// it looks like all the chunks are being transfered, but the file is not being reconstructed
-// a text file is empty and a jpg file is corrupted. Not sure if it's not transferring correctly (although if i print the data is looks identical to the original)
-// So i think it's not being reconstructed correctly
-
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
@@ -36,7 +31,7 @@ class RtcConnection {
     public onLocalStreamSet = (stream : MediaStream) => {}
     public onRemoteStreamSet = (stream : MediaStream) => {}
     public onGetMessage = (name: string) => {}
-    public onGetFile = (file: File) => {}
+    public onGetFile = (file: string, fileName : string) => {}
 
     // datachannels
     private dataChannel : RTCDataChannel | undefined;
@@ -45,7 +40,7 @@ class RtcConnection {
     // file exchange
     private sendingFile : boolean = false;
     private file : File | undefined;
-    private maxChunkSize : number = 16384;
+    private maxChunkSize : number = 16384 * 9;
     private fileSize_received = 0;
     private fileName_received = "";
     private fileChunks_received : string[] = [];
@@ -58,6 +53,15 @@ class RtcConnection {
         this.textChannel?.send(msg);
     }
     onReadAsDataURL(event : ProgressEvent<FileReader> | null, text : any) {
+        // we can't send the file directly, we have to split it into chunks
+        // and send them one by one
+
+        // steps:
+        // 1. calculate the size of the file
+        // 2. send the size of the file
+        // 3. send the file in chunks
+        // 4. when all chunks are sent, send a message that the file is sent
+        // 5. receiver checks if all the chunks are received and sends a response
         if (! this.dataChannel)
             return;
 
@@ -73,9 +77,11 @@ class RtcConnection {
             let fileName = "temp";
             if (this.file)
                 fileName = this.file.name;
-            console.log("sending file", event);
+            console.log("sending file", event, text);
             // this.dataChannel.send(fileName);
             let fileSize = text.length;
+            // calculate the size of the file in bytes
+            console.log("file size", fileSize);
             this.dataChannel.send(JSON.stringify({size : fileSize.toString(), name : fileName}));
         }
 
@@ -108,45 +114,6 @@ class RtcConnection {
         let reader = new window.FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event : ProgressEvent<FileReader> | null) => {this.onReadAsDataURL(event, "")};
-        return
-
-        this.sendingFile = true;
-        this.file = file;
-
-        console.log("sending file", file);
-
-        // we can't send the file directly, we have to split it into chunks
-        // and send them one by one
-
-        // steps:
-        // 1. calculate the size of the file
-        // 2. send the size of the file
-        // 3. send the file in chunks
-        // 4. when all chunks are sent, send a message that the file is sent
-        // 5. receiver checks if all the chunks are received and sends a response
-
-        let fileSize = file.size;
-
-        // send a message to the receiver that we are sending a file
-        this.dataChannel?.send('FileIncoming');
-        
-        this.dataChannel?.send(fileSize.toString());
-
-        let curChunk = 0;
-        while ((curChunk * this.maxChunkSize) < fileSize) {
-            console.log("sending chunk", curChunk);
-            let chunk = file.slice(curChunk * this.maxChunkSize, (curChunk + 1) * this.maxChunkSize);
-            console.log("chunk", chunk);
-            const b64 = await blobToBase64(chunk);
-            const jsonData = JSON.stringify({blob: b64}); 
-            // let jsonData = JSON.stringify(chunk);
-            console.log("sending chunk", jsonData);
-            this.dataChannel?.send(jsonData); 
-            curChunk++;
-        }
-
-        this.dataChannel?.send('fileSent');
-
     }
 
     receiveThroughDataChannel(event : MessageEvent) {
@@ -168,28 +135,16 @@ class RtcConnection {
         // check if it is the endindicator of a file
         if (event.data == 'fileSent') {
             // recreate the file
+            let temp : string = this.fileChunks_received.join('');
 
-            // determine filetype from filename
-            let fileType = this.fileName_received.split('.').pop();
-            
-            const arrayBuffer : ArrayBuffer = new ArrayBuffer(this.fileSize_received);
-            const blob = new Blob( [ arrayBuffer ]);	
-            const objectURL = URL.createObjectURL( blob );
-            console.log("completed", blob, objectURL);
-
-            // create a file from the blob
-            // TODO
-            let file = new File([blob], this.fileName_received, {lastModified: Date.now()});
-
-            // let file = new File(this.fileChunks_received, "newFile");
-            console.log("file received", file);
+            console.log("totla file size", temp.length, temp);
 
             // check if the complete file is received
             if (this.fileChunks_received.length * this.maxChunkSize >= this.fileSize_received) {
                 // send a message to the other peer that all chunks are received
                 this.dataChannel?.send('allChunksReceived');
                 this.waitingForFile = false;
-                this.onGetFile(file);
+                this.onGetFile(temp, this.fileName_received);
             } else {
                 // if not, send a message that there was a dataerror
                 this.dataChannel?.send('dataerror');
