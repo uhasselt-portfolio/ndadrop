@@ -1,6 +1,7 @@
 import { h } from 'preact';
 import { useContext, useState } from "preact/hooks";
-import { SocketContext } from './app';
+import { SocketContext } from '../pages/App';
+import Button from './Button';
 
 interface Props {
     ownName: string;
@@ -26,10 +27,10 @@ const MemberList = (props: Props) => {
         const filteredMembers = members.filter(member => member !== props.ownName);
 
         return filteredMembers.map((member) => {
-            return <li>
+            return <div class='flex flex-row gap-3' key={member}>
                 <div>{member}</div>
-                <button onClick={() => props.onDirectChatClick(member)}>Call</button>
-            </li>;
+                <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member)}>Call</Button>
+            </div>;
         });
     }
 

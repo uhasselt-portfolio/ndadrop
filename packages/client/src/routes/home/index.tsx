@@ -1,8 +1,8 @@
 import { createRef, h } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
-import { SocketContext } from '../../components/app';
-import MemberList from '../../components/member-list';
-import PrivateChat from '../../components/privateChat';
+import { SocketContext } from '../../pages/App';
+import MemberList from '../../components/MemberList';
+import PrivateChat from '../../components/PrivateChat';
 
 // Tailwind
 // https://fuadnafiz98.hashnode.dev/configuring-preact-with-tailwind-css
@@ -82,7 +82,7 @@ const Home = () => {
 
 	const render = () => {
 		return(
-			<div className="flex bg-slate-200 relative">
+			<div className="flex h-screen bg-slate-200 relative">
 				{!isInPrivateChat && renderHomeScreen()}
 				{isInPrivateChat && renderPrivateChat()}
 			</div>

@@ -1,17 +1,8 @@
 import { createRef, h } from 'preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 import RtcConnection from '../api/RtcConnection';
-import { SocketContext } from './app';
-import FileUpload from './fileUpload';
-
-const downloadFile = (message: Message) => {
-	if (message.type != 'file') return;
-	let url = message.fileData;
-	let a = document.createElement('a');
-	a.href = url;
-	a.download = message.fileName;
-	a.click();
-}
+import { SocketContext } from '../pages/App';
+import FileUpload from './FileUpload';
 
 type ChatModes = {
     text : boolean,
@@ -67,7 +58,7 @@ const PrivateChat = (props: Props) => {
     const videoLocal = createRef();
 	const videoRemote = createRef();
 
-    // functions
+    // Handlers
     const onChatSend = (e: any) => {
 		e.preventDefault();
 		rtcCon.sendMessageThroughDataChannel(message);
@@ -101,12 +92,18 @@ const PrivateChat = (props: Props) => {
 		}]);
 	}
 
+	// Helpers
+	const downloadFile = (message: Message) => {
+		if (message.type != 'file') return;
+		let url = message.fileData;
+		let a = document.createElement('a');
+		a.href = url;
+		a.download = message.fileName;
+		a.click();
+	}
+
     const sendFile = (File : File) => {
-		console.log("Sending file : ", File);
-
-		// Send the file through the data channel
 		rtcCon.sendFileThroughDataChannel(File);
-
 		return true
 	}
 
