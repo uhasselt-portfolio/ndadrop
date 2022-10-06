@@ -4,6 +4,13 @@ import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from './app';
 import FileUpload from './fileUpload';
 
+
+// 1 player creates a groupchat room
+//  => server creates a room with a unique id and only the creator is in the room
+// the people in the room can add other people to the room from globalchat
+//  => these people get request and if the accept the server adds them to the room 
+
+
 const downloadFile = (message: Message) => {
 	if (message.type != 'file') return;
 	let url = message.fileData;
@@ -30,18 +37,15 @@ type Message = {
 }
 
 interface Props {
-	isCaller : boolean,
-	chatModes : ChatModes,
-	peer : any
+	groupId : number,
+	chatModes : ChatModes
 }
 
 enum AnswerCallStatus {
 	PENDING,
-	ACCEPTED,
-	REJECTED
+	CONNECTED,
+    REJECTED
 }
-
-// TODO : video for callee aanzetten
 
 /*
  * The page for a one-on-one chat with another user
@@ -51,7 +55,7 @@ enum AnswerCallStatus {
  * @para peer : the peer to initiate the chat with ( TODO : set correct type, but now any because I don't know if it will change)
  * @para isCaller : a boolean indicating if the user is the caller or the callee
  */
-const PrivateChat = (props: Props) => {
+const GroupChat = (props: Props) => {
     // Context
     const socket = useContext(SocketContext);
 
@@ -64,7 +68,8 @@ const PrivateChat = (props: Props) => {
     const [messages, setMessages] = useState<Message[]>([]);
 	const [choosingFile, setChoosingFile] = useState<boolean>(false);
 
-	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.ACCEPTED : AnswerCallStatus.PENDING);
+	// const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.ACCEPTED : AnswerCallStatus.PENDING);
+    const [callStatus, setCallStatus] = useState<AnswerCallStatus>(AnswerCallStatus.PENDING);
 
     const videoLocal = createRef();
 	const videoRemote = createRef();
@@ -247,31 +252,14 @@ const PrivateChat = (props: Props) => {
 		)
 	}
 
-	const renderTransferedFiles = () => {
-		return (
-			<div>
-				<h3>Received files</h3>
-				{/* {renderReceivedFiles()} */}
-				<h3>Sent files</h3>
-				{/* {renderSendFiles()} */}
-			</div>
-		)
-	}
-
-
-    // setup the rtc connection
-
 	useEffect(() => {
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
 
-		// the caller initiates the connection and sends a webrtcRequest
-		if (props.isCaller) {
-			rtcCon.askForPermission(props.peer, socket);
-		} else {
-			// console.log("callee", props);
-			// rtcCon.receivePermissionQuestion({peer : props.peer}, socket);
-		}
+		// initiate a rtc connection with the server pertaining to the specific room
+        // TODO
+        // if this is the creator of the room, send a creation request to the server
+        // else, send a join request to the server
 
 		// incoming messages pertaining to the rtc connection
 		// RTCPermissionAndwer : the answer from a peer to a rtc connection request
@@ -284,7 +272,7 @@ const PrivateChat = (props: Props) => {
 		handleIceCandidate();
 
 		// Webcam
-		handleLocalWebcamView();
+		// handleLocalWebcamView(); // Don't do this in group chat => otherwise to much video streams when multiple people are in the room
 		handleRemoteWebcamView();
 
 	}, []);
@@ -293,13 +281,13 @@ const PrivateChat = (props: Props) => {
 	const renderAnswerCall = () => {
 
 		const onAccept = () => {
-			setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
-			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, true);
+			setCallStatus(AnswerCallStatus.CONNECTED);
+			// rtcCon.receivePermissionQuestion({peer : props.peer}, socket, true);
 		}
 
 		const onReject = () => {
-			setAnswerCallStatus(AnswerCallStatus.REJECTED);
-			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, false);
+			setCallStatus(AnswerCallStatus.REJECTED);
+			// rtcCon.receivePermissionQuestion({peer : props.peer}, socket, false);
 		}
 
 		return (
@@ -333,9 +321,9 @@ const PrivateChat = (props: Props) => {
 	const render = () => {
 		return (
 			<div>
-				{answerCallStatus === AnswerCallStatus.PENDING && renderAnswerCall()}
-				{answerCallStatus === AnswerCallStatus.ACCEPTED && renderPrivateChat()}
-				{answerCallStatus === AnswerCallStatus.REJECTED && renderRejectCall()}
+				{callStatus === AnswerCallStatus.PENDING && renderAnswerCall()}
+				{callStatus === AnswerCallStatus.CONNECTED && renderPrivateChat()}
+				{callStatus === AnswerCallStatus.REJECTED && renderRejectCall()}
 			</div>
 		)
 	}
@@ -347,4 +335,4 @@ const PrivateChat = (props: Props) => {
 }
 
 
-export default PrivateChat;
+export default GroupChat;
