@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import RtcConnection
+import RtcConnection from "./RtcConnection";
 
 type Member = {
     id: string;
