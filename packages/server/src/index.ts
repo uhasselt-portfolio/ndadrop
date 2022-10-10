@@ -5,7 +5,7 @@ import http from 'http';
 import { Server } from "socket.io";
 import { adjectives, animals, uniqueNamesGenerator } from 'unique-names-generator';
 import { config } from "./config";
-import RoomService from "./services/room.service";
+import RoomService, {Member} from "./services/room.service";
 import FingerprintUtil from "./utils/fingerprint.util";
 
 const app = express();
@@ -143,17 +143,24 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('globalMessage', (msg : {message : any, sender : string}) => {
+	socket.on('globalMessage', (msg : {message : string, sender : string}) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member asking for a rtc connection from: " + msg.sender + " sending a global message : " + msg.message);
-		//TODO: check if the peer is in the room
-	    //      check if the peer is not the same as the one asking
-		//	    check if there isn't already a rtc connection between the two peers
+		console.log("member : " + msg.sender + " sending a global message : " + msg.message);
+		// io.to(room.getRoomId()).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
 
-		io.to(room.getRoomId()).emit('globalMessage', {sender : msg.sender, message : msg.message});
+		// send to all clients in the room except the one that sent the message
 
+		// get all members of the room
+		const members = room.getMembers();
+		// for (let member of members) {
+		// 	const m : Member = room.getMemberByName(member);
+		// 	// if(member.id != id){ // leave the sender OUT
+		// 		const memberSocketId = m.socketId;
+		// 		socket.to(memberSocketId).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
+		// 	// }
+		// }
 	});
 
 });

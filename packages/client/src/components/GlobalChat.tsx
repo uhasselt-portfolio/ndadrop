@@ -29,6 +29,7 @@ const GlobalChat = (props: Props) => {
             message : message,
             sender : props.ownName,
         }
+        console.log("sending message, ", newMessage);
         socket.emit('globalMessage', newMessage);
 		setMessages(m => [...m, {payload : message, own : true}]);
 		setMessage("");
@@ -40,13 +41,12 @@ const GlobalChat = (props: Props) => {
 		setMessage(message);
 	}
 
-    const incomingMessage = (message : any, sender : string) => {
+    const incomingMessage = (message : string, sender : string) => {
         if (props.ownName == sender) {
             return;
+        } else {
+            setMessages(m => [...m, {payload : message, own : false}]);
         }
-
-        setMessages(m => [...m, {payload : message, own : false}]);
-
     }
 
     
@@ -55,7 +55,7 @@ const GlobalChat = (props: Props) => {
         return (
             <div>
                 {messages.map((message, index) => {
-                    return <div key={index}>{message}</div>;
+                    return <div key={index}>{message.payload}</div>;
                 })}
             </div>
         )
@@ -63,9 +63,9 @@ const GlobalChat = (props: Props) => {
 
     const render = () => {
 
-        socket.on('globalMessage', (message : any, sender : any) => {
-            console.log("incoming global message : ", message, "sender : ", sender);
-            incomingMessage(message, sender);
+        socket.on('globalBroadcast', (msg : {message : string, sender : string}) => {
+            console.log("incoming global message : ", msg.message, "sender : ", msg.sender, "total : ", msg);
+            incomingMessage(msg.message, msg.sender);
         });
 
         return (
