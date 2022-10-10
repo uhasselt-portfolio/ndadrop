@@ -31,7 +31,6 @@ const Home = () => {
 		// sendJoinSignal();
 		// handleChatSend()
 
-
 		// WebRTC
 		handlePermissionRequest();
 	}, []);

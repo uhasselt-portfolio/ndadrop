@@ -55,14 +55,10 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('chat', (msg) => {
-		console.log("Received chat!");
-
 		io.to(room.getRoomId()).emit('chat', msg);
 	});
 
 	socket.on('directChat', (msg) => {
-		console.log("trying to send direct chat to: " + msg.to);
-		console.log("from " + msg.from);
 
 	});
 
@@ -70,7 +66,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
+		// console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -86,7 +82,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
+		// console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
 
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
@@ -99,7 +95,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member sending a sdp offer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.offer);
+		// console.log("member sending a sdp offer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.offer);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -115,7 +111,7 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member sending a sdp answer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.answer);
+		// console.log("member sending a sdp answer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.answer);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -147,19 +143,21 @@ io.on('connection', (socket) => {
 		const metadata = socket.handshake;
 		const id = FingerprintUtil.scanSocket(metadata);
 		const sender = room.getMember(id);
-		console.log("member : " + msg.sender + " sending a global message : " + msg.message);
-		// io.to(room.getRoomId()).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
+		io.to(room.getRoomId()).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
 
 		// send to all clients in the room except the one that sent the message
 
 		// get all members of the room
-		const members = room.getMembers();
+		// const members = room.getMembers();
 		// for (let member of members) {
-		// 	const m : Member = room.getMemberByName(member);
-		// 	// if(member.id != id){ // leave the sender OUT
+		// 	const m : Member | undefined = room.getMemberByName(member);
+		// 	console.log("sending global message to peer: " + member);
+		// 	if (m) {
 		// 		const memberSocketId = m.socketId;
-		// 		socket.to(memberSocketId).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
-		// 	// }
+		// 		if (memberSocketId !== socket.id) {
+		// 			socket.to(memberSocketId).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
+		// 		}
+		// 	}
 		// }
 	});
 

@@ -1,9 +1,8 @@
 import { h } from 'preact';
-import { useState, useContext } from 'preact/hooks';
+import { useState, useContext, useEffect } from 'preact/hooks';
 import { SocketContext } from '../pages/App';
 
 interface Props {
-    // onDirectChatClick: (name: string) => void;
     ownName: string;
 }
 
@@ -29,7 +28,6 @@ const GlobalChat = (props: Props) => {
             message : message,
             sender : props.ownName,
         }
-        console.log("sending message, ", newMessage);
         socket.emit('globalMessage', newMessage);
 		setMessages(m => [...m, {payload : message, own : true}]);
 		setMessage("");
@@ -41,13 +39,21 @@ const GlobalChat = (props: Props) => {
 		setMessage(message);
 	}
 
-    const incomingMessage = (message : string, sender : string) => {
-        if (props.ownName == sender) {
+    const incomingMessage = (message : string, sender : string, receiver : string) => {
+        if (receiver == sender) {
             return;
         } else {
             setMessages(m => [...m, {payload : message, own : false}]);
         }
     }
+
+    useEffect(() => {
+        if (props.ownName != "") {
+            socket.on('globalBroadcast', (msg : {message : string, sender : string}) => {
+                incomingMessage(msg.message, msg.sender, props.ownName);
+            });
+        }
+    }, [props.ownName]);
 
     
     // render
@@ -62,11 +68,6 @@ const GlobalChat = (props: Props) => {
     }
 
     const render = () => {
-
-        socket.on('globalBroadcast', (msg : {message : string, sender : string}) => {
-            console.log("incoming global message : ", msg.message, "sender : ", msg.sender, "total : ", msg);
-            incomingMessage(msg.message, msg.sender);
-        });
 
         return (
             <div>
