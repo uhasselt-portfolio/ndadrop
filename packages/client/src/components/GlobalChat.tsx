@@ -96,7 +96,9 @@ const GlobalChat = (props: Props) => {
 
         return (
             <div class='flex flex-col gap-2 bg-white p-7 w-[350px] rounded-lg shadow-sm'>
-                {renderMessage()}
+                <div class='overflow-auto max-h-[250px]'>
+                    {renderMessage()}
+                </div>
                 <div class='flex flex-row gap-2 w-full'>
                     <input
                     class=' p-2 bg-slate-100 rounded-lg w-full'
