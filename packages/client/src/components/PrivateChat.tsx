@@ -246,7 +246,7 @@ const PrivateChat = (props: Props) => {
 		return(
 			<div>
 				<FileUpload uploadFile={sendFile} />
-				<button onClick={() => setChoosingFile(false)}>Cancel</button>
+				{/* <button onClick={() => setChoosingFile(false)}>Cancel</button> */}
 			</div>
 		)
 	}
@@ -254,7 +254,7 @@ const PrivateChat = (props: Props) => {
 	const renderMessaging = () => {
 		return(
 			<div>
-				{! choosingFile &&
+				{//! choosingFile &&
 					<div>
 						<input
 						onChange={(e) => onTyping(e)}
@@ -262,11 +262,12 @@ const PrivateChat = (props: Props) => {
 						type="text"
 						/>
 						<button onClick={onChatSend}>Send</button>
-						<button onClick={() => setChoosingFile(true)}>Send file</button>
+						{/* <button onClick={() => setChoosingFile(true)}>Send file</button> */}
 					</div>
 				}
 
-				{choosingFile && renderFilePicker()}
+				{/* {choosingFile && renderFilePicker()} */}
+				{renderFilePicker()}
 				{renderMessages()}
 			</div>
 		)

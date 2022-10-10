@@ -80,6 +80,7 @@ class RtcConnection {
         }
     
         // using JSON.stringify for chrome!
+        console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
     
         var remainingDataURL = text.slice(fileMessage.data.length);
@@ -146,7 +147,6 @@ class RtcConnection {
 
         // if we are waiting for the filesize, we have to check if the message is a number
         if (this.waitingForFileSize) {
-            console.log(event.data)
             let temp = JSON.parse(event.data);
             this.fileSize_received = temp.size;
             this.fileName_received = temp.name;
@@ -157,6 +157,7 @@ class RtcConnection {
 
         // if we are waiting for a file, receive it
         if (this.waitingForFile) {
+            console.log("file chunks recieved", this.fileChunks_received, "-", event.data);
             let chunk : FileMessage = JSON.parse(event.data);
             // add received chunk to the array
             this.fileChunks_received.push(chunk.data);
@@ -301,7 +302,6 @@ class RtcConnection {
 
         // send answer to peer
         socket.emit('sdpAnswer', {answer : tempAnswer, peer : remoteOffer.peer});
-
 
         return
     }
