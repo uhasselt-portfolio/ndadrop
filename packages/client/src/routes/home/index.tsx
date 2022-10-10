@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from 'preact/hooks';
 import { SocketContext } from '../../pages/App';
 import MemberList from '../../components/MemberList';
 import PrivateChat from '../../components/PrivateChat';
+import GlobalChat from '../../components/GlobalChat';
 
 // Tailwind
 // https://fuadnafiz98.hashnode.dev/configuring-preact-with-tailwind-css
@@ -66,9 +67,14 @@ const Home = () => {
 	// Render
 	const renderHomeScreen = () => {
 		return(
-			<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg'>
-				<div class="flex text-xl justify-center mb-3">Friends who're online</div>
-				<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
+			<div class='flex gap-10 flex-col'>
+				<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg'>
+					<div class="flex text-xl justify-center mb-3">Friends who're online</div>
+					<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
+				</div>
+				<div class='flex flex-col rounded-lg items-center'>
+					<GlobalChat ownName={ownName}/>
+				</div>
 			</div>
 		)
 	}

@@ -55,3 +55,4 @@ class RoomService {
 }
 
 export default RoomService;
+export {Member};
