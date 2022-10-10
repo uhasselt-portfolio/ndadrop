@@ -31,7 +31,6 @@ const Home = () => {
 		// sendJoinSignal();
 		// handleChatSend()
 
-
 		// WebRTC
 		handlePermissionRequest();
 	}, []);
@@ -68,6 +67,10 @@ const Home = () => {
 	const renderHomeScreen = () => {
 		return(
 			<div class='flex gap-10 flex-col'>
+				<div class='flex flex-col rounded-lg items-center'>
+					<p>Your name : </p>
+					{ownName}
+				</div>
 				<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg'>
 					<div class="flex text-xl justify-center mb-3">Friends who're online</div>
 					<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
