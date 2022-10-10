@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Phone, Send } from 'lucide-preact';
 import { h } from 'preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { SocketContext } from '../pages/App';
@@ -73,7 +74,9 @@ const GlobalChat = (props: Props) => {
                     const style = clsx("p-2 rounded-lg flex flex-row w-full",
                         message.own ? "bg-blue-200" : "bg-gray-200");
 
-                    const button = message.own ? null : <Button size='sm' type='glow' onClick={() => props.onDirectChatClick(sender, false)}>Call</Button>;
+                    const button = message.own ? null : <Button size='sm' type='glow' onClick={() => props.onDirectChatClick(sender, false)}>
+                        <Phone color="black" size={16}/>
+                    </Button>;
 
                     return <div class={style} key={index}>
                         <div class='w-full'>
@@ -103,7 +106,9 @@ const GlobalChat = (props: Props) => {
                     value={message}
                     type="text"
                     />
-                    <button class='p-2 bg-black rounded-lg text-white' onClick={onChatSend}>Send</button>
+                    <button class='p-2 bg-black rounded-lg text-white' onClick={onChatSend}>
+                        <Send color="white" size={16}/>
+                    </button>
                 </div>
             </div>
         )

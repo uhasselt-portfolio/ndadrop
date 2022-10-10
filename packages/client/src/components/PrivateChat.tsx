@@ -4,6 +4,7 @@ import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from '../pages/App';
 import Button from './Button';
 import FileUpload from './FileUpload';
+import { Check, X } from 'lucide-preact';
 
 type ChatModes = {
     text : boolean,
@@ -61,7 +62,7 @@ const PrivateChat = (props: Props) => {
 	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.WAITING : AnswerCallStatus.PENDING);
 
 	const [callingPeer, setCallingPeer] = useState<string>('');
-	
+
 	const videoLocal = createRef();
 	const videoRemote = createRef();
 
@@ -118,7 +119,7 @@ const PrivateChat = (props: Props) => {
 		// send via socket that I leave the call
 		socket.emit('leave-private-chat', {peer : props.peer});
 
-		
+
 
 		props.updateIsInPrivateChat(false);
 	}
@@ -341,8 +342,14 @@ const PrivateChat = (props: Props) => {
 			<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg items-center gap-3'>
 				<div class='italic text-gray-700'>You're getting an incoming call...</div>
 				<div class='flex flex-row gap-10'>
-					<Button size='sm' type='primary-dark-2' onClick={onAccept}>Accept</Button>
-					<Button size='sm' type='danger' onClick={onReject}>Reject</Button>
+					<Button size='sm' type='primary-dark-2' onClick={onAccept}>
+						<Check color="white" size={16}/>
+						<span>Accept</span>
+					</Button>
+					<Button size='sm' type='danger' onClick={onReject}>
+						<X color="red" size={16}/>
+						<span>Reject</span>
+					</Button>
 				</div>
 			</div>
 		)
