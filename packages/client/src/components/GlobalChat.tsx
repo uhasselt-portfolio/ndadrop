@@ -6,7 +6,7 @@ import Button from './Button';
 
 interface Props {
     ownName: string;
-    onDirectChatClick: (name: string) => void;
+    onDirectChatClick: (name: string, video: boolean) => void;
 }
 
 type Message = {
@@ -36,7 +36,7 @@ const GlobalChat = (props: Props) => {
         if (message.length == 0) return;
 
         socket.emit('globalMessage', newMessage);
-		setMessages(m => [...m, {payload : message, own : true}]);
+		setMessages(m => [...m, {payload : message, own : true, sender : props.ownName}]);
 		setMessage("");
 	}
 
@@ -73,7 +73,7 @@ const GlobalChat = (props: Props) => {
                     const style = clsx("p-2 rounded-lg flex flex-row w-full",
                         message.own ? "bg-blue-200" : "bg-gray-200");
 
-                    const button = message.own ? null : <Button size='sm' type='glow' onClick={() => props.onDirectChatClick(sender)}>Call</Button>;
+                    const button = message.own ? null : <Button size='sm' type='glow' onClick={() => props.onDirectChatClick(sender, false)}>Call</Button>;
 
                     return <div class={style} key={index}>
                         <div class='w-full'>
