@@ -70,11 +70,11 @@ class RtcConnection {
             let fileName = "temp";
             if (this.file)
                 fileName = this.file.name;
-            console.log("sending file", event, text);
+            // console.log("sending file", event, text);
             // this.dataChannel.send(fileName);
             let fileSize = text.length;
             // calculate the size of the file in bytes
-            console.log("file size", fileSize);
+            // console.log("file size", fileSize);
             this.dataChannel.send(JSON.stringify({size : fileSize.toString(), name : fileName}));
         }
 
@@ -87,7 +87,7 @@ class RtcConnection {
         }
     
         // using JSON.stringify for chrome!
-        console.log("sending : ", JSON.stringify(fileMessage));
+        // console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
     
         var remainingDataURL = text.slice(fileMessage.data.length);
@@ -131,7 +131,7 @@ class RtcConnection {
             // recreate the file
             let temp : string = this.fileChunks_received.join('');
 
-            console.log("totla file size", temp.length, temp);
+            // console.log("totla file size", temp.length, temp);
 
             // check if the complete file is received
             if (this.fileChunks_received.length * this.maxChunkSize >= this.fileSize_received) {
@@ -164,7 +164,7 @@ class RtcConnection {
 
         // if we are waiting for a file, receive it
         if (this.waitingForFile) {
-            console.log("file chunks recieved", this.fileChunks_received, "-", event.data);
+            // console.log("file chunks recieved", this.fileChunks_received, "-", event.data);
             let chunk : FileMessage = JSON.parse(event.data);
             // add received chunk to the array
             this.fileChunks_received.push(chunk.data);
@@ -273,8 +273,6 @@ class RtcConnection {
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
-        // Make a http request to /room/askRTXPermission
-        console.log("asking for permission from member", member, this.videoCall);
         socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants', videoCall : this.videoCall});
     }
 
