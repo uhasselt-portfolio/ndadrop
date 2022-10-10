@@ -60,10 +60,10 @@ io.on('connection', (socket) => {
 
 	});
 
-	socket.on('askRTCPermission', (msg : {peer : any, msg : string}) => {
+	socket.on('askRTCPermission', (msg : {peer : any, msg : string, videoCall : boolean}) => {
 		const id = socket.id;
 		const sender = room.getMember(id);
-		// console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
+		console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg + " videoCall: " + msg.videoCall);
 		//TODO: check if the peer is in the room
 	    //      check if the peer is not the same as the one asking
 		//	    check if there isn't already a rtc connection between the two peers
@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
 		const receiver = room.getMemberByName(msg.peer);
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
-			socket.to(receiverSocketId).emit('RTCPermissionRequest', {peer : sender?.name, msg : msg.msg});
+			socket.to(receiverSocketId).emit('RTCPermissionRequest', {peer : sender?.name, msg : msg.msg, videoCall : msg.videoCall});
 		}
 	});
 
@@ -129,6 +129,19 @@ io.on('connection', (socket) => {
 		if(receiver){
 			const receiverSocketId = receiver.socketId;
 			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, iceCandidate : msg.iceCandidate});
+		}
+	});
+
+	socket.on('leave-private-chat', (msg : {peer : any}) => {
+		console.log("leaving private chat with: " + msg.peer);
+		const id = socket.id;
+		const sender = room.getMember(id);
+
+		const receiver = room.getMemberByName(msg.peer);
+		if(receiver){
+			console.log("leaving private chat with member: " + receiver.name);
+			const receiverSocketId = receiver.socketId;
+			socket.to(receiverSocketId).emit('leave-private-chat', {peer : sender?.name});
 		}
 	});
 

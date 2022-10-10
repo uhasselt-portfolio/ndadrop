@@ -21,6 +21,7 @@ const Home = () => {
 
 	const [privateChatPeer, setPrivateChatPeer] = useState<string>("");
 	const [privateChatIsCaller, setPrivateChatIsCaller] = useState<boolean>(false);
+	const [privateChatVideo, setPrivateChatVideo] = useState<boolean>(false);
 
 	// Constructor
 	useEffect(() => {
@@ -49,17 +50,20 @@ const Home = () => {
 
 	// WebRTC Handlers
 	const handlePermissionRequest = async () => {
-		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean}) => {
+		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean, videoCall : boolean}) => {
+			console.log("Received permission reques ", msg);
 			setIsInPrivateChat(true);
 			setPrivateChatIsCaller(false);
 			setPrivateChatPeer(msg.peer);
+			setPrivateChatVideo(msg.videoCall);
 		});
 	}
 
 	// Events
-	const onDirectChatInitiate = (member: any) => {
+	const onDirectChatInitiate = (member: any, video : boolean) => {
 		setPrivateChatIsCaller(true);
 		setPrivateChatPeer(member);
+		setPrivateChatVideo(video);
 		setIsInPrivateChat(true);
 	}
 
@@ -90,7 +94,7 @@ const Home = () => {
 	const renderPrivateChat = () => {
 		return (
 			<div class="flex flex-col w-full border gap-3 pt-3">
-				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} updateIsInPrivateChat={updateIsInPrivateChat}/>
+				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: privateChatVideo, text : true}} peer={privateChatPeer} updateIsInPrivateChat={updateIsInPrivateChat}/>
 			</div>
 		)
 	}

@@ -4,6 +4,11 @@ type FileMessage = {
     data: string;
 }
 
+interface Props {
+    ownName: string;
+    onDirectChatClick: (name: string, video : boolean) => void;
+}
+
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
@@ -12,11 +17,14 @@ class RtcConnection {
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
 
+    public videoCall : boolean = false;
+
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
     public onRemoteStreamSet = (stream : MediaStream) => {}
     public onGetMessage = (name: string) => {}
     public onGetFile = (file: string, fileName : string) => {}
+    public onCloseCall = () => {}
 
     // datachannels
     private dataChannel : RTCDataChannel | undefined;
@@ -79,6 +87,7 @@ class RtcConnection {
         }
     
         // using JSON.stringify for chrome!
+        console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
     
         var remainingDataURL = text.slice(fileMessage.data.length);
@@ -145,7 +154,6 @@ class RtcConnection {
 
         // if we are waiting for the filesize, we have to check if the message is a number
         if (this.waitingForFileSize) {
-            console.log(event.data)
             let temp = JSON.parse(event.data);
             this.fileSize_received = temp.size;
             this.fileName_received = temp.name;
@@ -156,6 +164,7 @@ class RtcConnection {
 
         // if we are waiting for a file, receive it
         if (this.waitingForFile) {
+            console.log("file chunks recieved", this.fileChunks_received, "-", event.data);
             let chunk : FileMessage = JSON.parse(event.data);
             // add received chunk to the array
             this.fileChunks_received.push(chunk.data);
@@ -169,26 +178,29 @@ class RtcConnection {
         this.onRemoteStreamSet(this.remoteStream);
         // add remote stream to video element
 
-        if (!this.localStream) {
-            if (hascameraacces) {
-                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
-                this.onLocalStreamSet(this.localStream);
-            }
-        }
-
-        if (this.localStream) {
-            this.localStream.getTracks().forEach((track) => {
-                if (this.localStream) {
-                    this.pc.addTrack(track, this.localStream)
+        // add local stream related stuff, when it's a video chat
+        if (this.videoCall) {
+            if (!this.localStream) {
+                if (hascameraacces) {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
+                    this.onLocalStreamSet(this.localStream);
                 }
-            })
-        }
-
-        this.pc.ontrack = (event) => {
-            event.streams[0].getTracks().forEach((track) => {
-                if (this.remoteStream)
-                    this.remoteStream.addTrack(track)
-            })
+            }
+    
+            if (this.localStream) {
+                this.localStream.getTracks().forEach((track) => {
+                    if (this.localStream) {
+                        this.pc.addTrack(track, this.localStream)
+                    }
+                })
+            }
+    
+            this.pc.ontrack = (event) => {
+                event.streams[0].getTracks().forEach((track) => {
+                    if (this.remoteStream)
+                        this.remoteStream.addTrack(track)
+                })
+            }
         }
 
         this.pc.onicecandidate = async (event) => {
@@ -202,7 +214,7 @@ class RtcConnection {
 
         // test datachannel
         // for testing we use cameraccess
-        let isCaller = hascameraacces;
+        let isCaller = hascameraacces;  // TODO
         if (isCaller) {
             this.dataChannel = this.pc.createDataChannel("datachannel");
             this.dataChannel.binaryType = "arraybuffer";
@@ -257,13 +269,13 @@ class RtcConnection {
                 }
             }
           }
-
     }
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
         // Make a http request to /room/askRTXPermission
-        socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants'});
+        console.log("asking for permission from member", member, this.videoCall);
+        socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants', videoCall : this.videoCall});
     }
 
     // receive a permission request from another peer via the server
@@ -302,7 +314,6 @@ class RtcConnection {
         // send answer to peer
         socket.emit('sdpAnswer', {answer : tempAnswer, peer : remoteOffer.peer});
 
-
         return
     }
 
@@ -323,6 +334,10 @@ class RtcConnection {
                 console.error('Error adding received ice candidate', e);
             }
         }
+    }
+
+    public async handleCloseCall() {
+
     }
 
     // close a connection with a peer

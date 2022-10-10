@@ -112,6 +112,17 @@ const PrivateChat = (props: Props) => {
 		return true
 	}
 
+	const leaveCall = () => {
+		// TODO : close webrtc connections
+
+		// send via socket that I leave the call
+		socket.emit('leave-private-chat', {peer : props.peer});
+
+		
+
+		props.updateIsInPrivateChat(false);
+	}
+
 	// Webcam
 	const handleLocalWebcamView = () => {
 		rtcCon.onLocalStreamSet = (stream: MediaStream) => {
@@ -153,6 +164,12 @@ const PrivateChat = (props: Props) => {
 			} else {
 				setAnswerCallStatus(AnswerCallStatus.REJECTED);
 			}
+		});
+	}
+
+	const handleCloseCall = async () => {
+		socket.on('leave-private-chat', (msg : {peer : any}) => {
+			props.updateIsInPrivateChat(false);
 		});
 	}
 
@@ -229,7 +246,7 @@ const PrivateChat = (props: Props) => {
 		return(
 			<div>
 				<FileUpload uploadFile={sendFile} />
-				<button onClick={() => setChoosingFile(false)}>Cancel</button>
+				{/* <button onClick={() => setChoosingFile(false)}>Cancel</button> */}
 			</div>
 		)
 	}
@@ -237,7 +254,7 @@ const PrivateChat = (props: Props) => {
 	const renderMessaging = () => {
 		return(
 			<div>
-				{! choosingFile &&
+				{//! choosingFile &&
 					<div>
 						<input
 						onChange={(e) => onTyping(e)}
@@ -245,11 +262,12 @@ const PrivateChat = (props: Props) => {
 						type="text"
 						/>
 						<button onClick={onChatSend}>Send</button>
-						<button onClick={() => setChoosingFile(true)}>Send file</button>
+						{/* <button onClick={() => setChoosingFile(true)}>Send file</button> */}
 					</div>
 				}
 
-				{choosingFile && renderFilePicker()}
+				{/* {choosingFile && renderFilePicker()} */}
+				{renderFilePicker()}
 				{renderMessages()}
 			</div>
 		)
@@ -272,6 +290,8 @@ const PrivateChat = (props: Props) => {
 	useEffect(() => {
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
+		rtcCon.onCloseCall = handleCloseCall;
+		rtcCon.videoCall = props.chatModes.video;
 
 		// the caller initiates the connection and sends a webrtcRequest
 		if (props.isCaller) {
@@ -290,6 +310,7 @@ const PrivateChat = (props: Props) => {
 		handleSdpOffer();
 		handleSdpAnswer();
 		handleIceCandidate();
+		handleCloseCall();
 
 		// Webcam
 		handleLocalWebcamView();
@@ -307,7 +328,6 @@ const PrivateChat = (props: Props) => {
 	const renderAnswerCall = () => {
 
 		const onAccept = () => {
-			console.log("onaccept")
 			setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
 			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, true);
 		}
@@ -352,6 +372,7 @@ const PrivateChat = (props: Props) => {
 				<h1>Private Chat</h1>
 				{props.chatModes.video && renderVideo()}
 				{props.chatModes.text && renderMessaging()}
+				{<button onClick={leaveCall}>Leave call</button>}
 			</div>
 		);
 	}
