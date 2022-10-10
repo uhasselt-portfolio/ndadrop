@@ -34,6 +34,8 @@ enum AnswerCallStatus {
 	REJECTED
 }
 
+// TODO : video for callee aanzetten
+
 /*
  * The page for a one-on-one chat with another user
  * Can be used to initiate a normal message char or a video chat
@@ -66,7 +68,6 @@ const PrivateChat = (props: Props) => {
 		rtcCon.sendMessageThroughDataChannel(message);
 		setMessages(m => [...m, {type : "text", payload : message, own : true}]);
 		setMessage("");
-		console.log("Sent message : " + message);
 	}
 
 	const onTyping = (e: any) => {
@@ -76,7 +77,6 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const onGetMessage = (name: string) => {
-		console.log("Got message : " + name, messages);
 		setMessages(m => [...m, {
 			type: "text",
 			own: false,

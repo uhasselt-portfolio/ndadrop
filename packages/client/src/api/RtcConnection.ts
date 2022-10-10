@@ -1,15 +1,5 @@
 import io, { Socket } from 'socket.io-client';
 
-const blobToBase64 = (blob : any) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = function () {
-        resolve(reader.result);
-      };
-    });
-  };
-
 type FileMessage = {
     data: string;
 }
@@ -21,11 +11,6 @@ class RtcConnection {
 
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
-
-    // constructor(messagesHandler : (name: string) => void, fileHandler :(name: string) => void) {
-    //     this.onGetMessage = messagesHandler;
-    //     this.onGetFile = fileHandler;
-    // }
 
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
