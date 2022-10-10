@@ -74,7 +74,7 @@ const Home = () => {
 	}
 	const renderPrivateChat = () => {
 		return (
-			<div class="flex flex-col w-full border border-red-500 gap-3 pt-3">
+			<div class="flex flex-col w-full border gap-3 pt-3">
 				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer}/>
 			</div>
 		)
