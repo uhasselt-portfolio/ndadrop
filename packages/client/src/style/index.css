@@ -581,6 +581,14 @@ video {
   height: auto;
 }
 
+.max-h-\[200px\] {
+  max-height: 200px;
+}
+
+.max-h-\[250px\] {
+  max-height: 250px;
+}
+
 .min-h-\[100\%\] {
   min-height: 100%;
 }
@@ -657,6 +665,18 @@ video {
 
 .gap-4 {
   gap: 1rem;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
 }
 
 .whitespace-nowrap {
