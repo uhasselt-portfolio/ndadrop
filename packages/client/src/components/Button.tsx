@@ -35,7 +35,7 @@ const Button = (props: Props) => {
     props.type === "primary" && "border-[#8b64ff] bg-[#8b64ff] text-[#ffffff]",
     props.type === "primary-dark" && "border-[#0a0a0a] bg-[#0a0a0a] text-[#ffffff]",
     props.type === "primary-dark-2" && "border-[#000823] bg-[#000823] text-[#ffffff]",
-    props.type === "glow" && "border-[#F6F3FF] bg-[#F6F3FF] text-[#8B64FF] shadow",
+    props.type === "glow" && "border-[#F6F3FF] bg-[#F6F3FF] text-blue-500 shadow",
     props.type === "secondary" && "bg-[#ffffff] text-[#0a0a0a] shadow-sm",
     props.type === "danger" && "border-red-50 bg-red-50 text-red-600",
     (props.width && props.width === "full") ? "w-full" : "w-min",

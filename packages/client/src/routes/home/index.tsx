@@ -66,23 +66,23 @@ const Home = () => {
 	const updateIsInPrivateChat = (value : boolean) => {
 		setIsInPrivateChat(value);
 		// TODO : memberlist is now not rerendered
-		
+
 	}
 
 	// Render
 	const renderHomeScreen = () => {
 		return(
 			<div class='flex gap-10 flex-col'>
-				<div class='flex flex-col rounded-lg items-center'>
-					<p>Your name : </p>
-					{ownName}
+				<div class='flex flex-row rounded-lg justify-center gap-2'>
+					<span>Your name</span>
+					<span class='italic font-bold'>{ownName}</span>
 				</div>
-				<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg'>
+				<div class='flex flex-col bg-white p-7 w-[350px] rounded-lg shadow-sm'>
 					<div class="flex text-xl justify-center mb-3">Friends who're online</div>
 					<MemberList onDirectChatClick={onDirectChatInitiate} ownName={ownName} />
 				</div>
 				<div class='flex flex-col rounded-lg items-center'>
-					<GlobalChat ownName={ownName}/>
+					<GlobalChat onDirectChatClick={onDirectChatInitiate} ownName={ownName}/>
 				</div>
 			</div>
 		)
