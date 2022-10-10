@@ -291,6 +291,7 @@ const PrivateChat = (props: Props) => {
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
 		rtcCon.onCloseCall = handleCloseCall;
+		rtcCon.videoCall = props.chatModes.video;
 
 		// the caller initiates the connection and sends a webrtcRequest
 		if (props.isCaller) {

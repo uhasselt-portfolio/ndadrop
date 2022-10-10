@@ -5,7 +5,7 @@ import Button from './Button';
 
 interface Props {
     ownName: string;
-    onDirectChatClick: (name: string) => void;
+    onDirectChatClick: (name: string, video : boolean) => void;
 }
 
 const MemberList = (props: Props) => {
@@ -30,7 +30,8 @@ const MemberList = (props: Props) => {
         return filteredMembers.map((member) => {
             return <div class='flex flex-row gap-3' key={member}>
                 <div>{member}</div>
-                <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member)}>Call</Button>
+                <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member, false)}>Chat</Button>
+                <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member, true)}>Video Call</Button>
             </div>;
         });
     }

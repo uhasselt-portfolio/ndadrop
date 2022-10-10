@@ -4,6 +4,11 @@ type FileMessage = {
     data: string;
 }
 
+interface Props {
+    ownName: string;
+    onDirectChatClick: (name: string, video : boolean) => void;
+}
+
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
@@ -11,6 +16,8 @@ class RtcConnection {
 
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
+
+    public videoCall : boolean = false;
 
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
@@ -171,26 +178,29 @@ class RtcConnection {
         this.onRemoteStreamSet(this.remoteStream);
         // add remote stream to video element
 
-        if (!this.localStream) {
-            if (hascameraacces) {
-                this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
-                this.onLocalStreamSet(this.localStream);
-            }
-        }
-
-        if (this.localStream) {
-            this.localStream.getTracks().forEach((track) => {
-                if (this.localStream) {
-                    this.pc.addTrack(track, this.localStream)
+        // add local stream related stuff, when it's a video chat
+        if (this.videoCall) {
+            if (!this.localStream) {
+                if (hascameraacces) {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
+                    this.onLocalStreamSet(this.localStream);
                 }
-            })
-        }
-
-        this.pc.ontrack = (event) => {
-            event.streams[0].getTracks().forEach((track) => {
-                if (this.remoteStream)
-                    this.remoteStream.addTrack(track)
-            })
+            }
+    
+            if (this.localStream) {
+                this.localStream.getTracks().forEach((track) => {
+                    if (this.localStream) {
+                        this.pc.addTrack(track, this.localStream)
+                    }
+                })
+            }
+    
+            this.pc.ontrack = (event) => {
+                event.streams[0].getTracks().forEach((track) => {
+                    if (this.remoteStream)
+                        this.remoteStream.addTrack(track)
+                })
+            }
         }
 
         this.pc.onicecandidate = async (event) => {
@@ -204,7 +214,7 @@ class RtcConnection {
 
         // test datachannel
         // for testing we use cameraccess
-        let isCaller = hascameraacces;
+        let isCaller = hascameraacces;  // TODO
         if (isCaller) {
             this.dataChannel = this.pc.createDataChannel("datachannel");
             this.dataChannel.binaryType = "arraybuffer";
@@ -264,7 +274,8 @@ class RtcConnection {
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
         // Make a http request to /room/askRTXPermission
-        socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants'});
+        console.log("asking for permission from member", member, this.videoCall);
+        socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants', videoCall : this.videoCall});
     }
 
     // receive a permission request from another peer via the server

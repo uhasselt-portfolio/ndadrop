@@ -41,6 +41,7 @@ const FileUpload = (props: Props) => {
               <div>
                 <br />
                 <h4>Choose before Pressing the Upload button</h4>
+                <br />
               </div>
             );
           }
@@ -50,11 +51,11 @@ const FileUpload = (props: Props) => {
         <div>
             <div>
                 <input type="file" onChange={onFileChange} />
+                {showCurrentFile()}
                 <button onClick={onFileUpload}>
                   Upload!
                 </button>
             </div>
-          {showCurrentFile()}
 		</div>
 	)
 }
