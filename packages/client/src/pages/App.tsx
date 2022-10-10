@@ -29,7 +29,7 @@ const App = () => {
     const [members, setMembers] = useState<string[]>([]);
 
 	return (
-        <div id="app">
+        <div id="app ">
         <SocketContext.Provider value={connection}>
             <MemberListContext.Provider value={{members, setMembers}}>
                 <Router>

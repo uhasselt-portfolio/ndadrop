@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "clsx": "^1.2.1",
+    "lucide-preact": "^0.91.0",
     "preact": "^10.10.0",
     "preact-render-to-string": "^5.2.1",
     "preact-router": "^3.2.1",
