@@ -173,6 +173,7 @@ class RtcConnection {
     }
 
     async createPeerConnection(socket : Socket, peer : any, hascameraacces : boolean = true) {
+        console.log("creating peer connction\n");
         this.pc = new RTCPeerConnection(this.pcConfig);
         this.remoteStream = new MediaStream();
         this.onRemoteStreamSet(this.remoteStream);
@@ -317,6 +318,7 @@ class RtcConnection {
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
         if (! this.pc.currentRemoteDescription) {
+            console.log("receiving sdpAnswer", this.pc);
             await this.pc.setRemoteDescription(msg.answer);
         }
 
@@ -335,12 +337,17 @@ class RtcConnection {
     }
 
     public async handleCloseCall() {
-
+        this.localStream?.getTracks().forEach(function(track) {
+            track.stop();
+          });
     }
 
     // close a connection with a peer
     public async closeConnection() {
         //TODO
+        this.localStream?.getTracks().forEach(function(track) {
+            track.stop();
+          });
     }
 
 }

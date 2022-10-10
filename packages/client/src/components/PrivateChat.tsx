@@ -114,12 +114,11 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const leaveCall = () => {
-		// TODO : close webrtc connections
 
 		// send via socket that I leave the call
 		socket.emit('leave-private-chat', {peer : props.peer});
 
-
+		rtcCon.handleCloseCall();
 
 		props.updateIsInPrivateChat(false);
 	}
@@ -171,6 +170,7 @@ const PrivateChat = (props: Props) => {
 	const handleCloseCall = async () => {
 		socket.on('leave-private-chat', (msg : {peer : any}) => {
 			props.updateIsInPrivateChat(false);
+			rtcCon.handleCloseCall();
 		});
 	}
 
