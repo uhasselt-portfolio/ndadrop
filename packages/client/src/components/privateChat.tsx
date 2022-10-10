@@ -60,7 +60,9 @@ const PrivateChat = (props: Props) => {
 
 	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.WAITING : AnswerCallStatus.PENDING);
 
-    const videoLocal = createRef();
+	const [callingPeer, setCallingPeer] = useState<string>('');
+	
+	const videoLocal = createRef();
 	const videoRemote = createRef();
 
     // Handlers
@@ -146,7 +148,8 @@ const PrivateChat = (props: Props) => {
 		socket.on('rtcPermissionAnswer', async (msg : {peer : any, accept : boolean}) => {
 			if(msg.accept) {
 				setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
-				await rtcCon.SendSDP(socket, msg.peer);
+				setCallingPeer(msg.peer);
+				// await rtcCon.SendSDP(socket, msg.peer);
 			} else {
 				setAnswerCallStatus(AnswerCallStatus.REJECTED);
 			}
@@ -294,10 +297,17 @@ const PrivateChat = (props: Props) => {
 
 	}, []);
 
+	useEffect(() => {
+		if (answerCallStatus === AnswerCallStatus.ACCEPTED && callingPeer !== "") {
+			rtcCon.SendSDP(socket, callingPeer);
+		}
+	}, [answerCallStatus, callingPeer]);
+
 	// Render
 	const renderAnswerCall = () => {
 
 		const onAccept = () => {
+			console.log("onaccept")
 			setAnswerCallStatus(AnswerCallStatus.ACCEPTED);
 			rtcCon.receivePermissionQuestion({peer : props.peer}, socket, true);
 		}

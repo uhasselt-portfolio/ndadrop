@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useContext, useState } from "preact/hooks";
-import { SocketContext, MemberListContext } from '../pages/App';
+import { SocketContext } from '../pages/App';
 import Button from './Button';
 
 interface Props {
@@ -12,10 +12,9 @@ const MemberList = (props: Props) => {
 
     // Context
     const socket = useContext(SocketContext);
-    const {members, setMembers} = useContext(MemberListContext)
 
     // State
-    // const [members, setMembers] = useState<string[]>([]);
+    const [members, setMembers] = useState<string[]>([]);
 
     // Render
     const render = () => {
