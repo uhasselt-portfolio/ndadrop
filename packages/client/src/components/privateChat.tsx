@@ -24,7 +24,8 @@ type Message = {
 interface Props {
 	isCaller : boolean,
 	chatModes : ChatModes,
-	peer : any
+	peer : any,
+	updateIsInPrivateChat : (value : boolean) => void
 }
 
 enum AnswerCallStatus {
@@ -326,6 +327,7 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const renderRejectCall = () => {
+		props.updateIsInPrivateChat(false);
 		return (
 			<div>
 				<h3>You rejected the call</h3>

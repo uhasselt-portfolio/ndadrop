@@ -63,6 +63,12 @@ const Home = () => {
 		setIsInPrivateChat(true);
 	}
 
+	const updateIsInPrivateChat = (value : boolean) => {
+		setIsInPrivateChat(value);
+		// TODO : memberlist is now not rerendered
+		
+	}
+
 	// Render
 	const renderHomeScreen = () => {
 		return(
@@ -84,7 +90,7 @@ const Home = () => {
 	const renderPrivateChat = () => {
 		return (
 			<div class="flex flex-col w-full border gap-3 pt-3">
-				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer}/>
+				<PrivateChat isCaller={privateChatIsCaller} chatModes={{video: true, text : true}} peer={privateChatPeer} updateIsInPrivateChat={updateIsInPrivateChat}/>
 			</div>
 		)
 	}
