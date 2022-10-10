@@ -35,7 +35,6 @@ const MemberList = (props: Props) => {
         });
     }
 
-    console.log("rendering members");
     return (
         <div class='flex flex-col gap-2'>
             {render()}

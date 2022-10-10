@@ -17,6 +17,7 @@ class RtcConnection {
     public onRemoteStreamSet = (stream : MediaStream) => {}
     public onGetMessage = (name: string) => {}
     public onGetFile = (file: string, fileName : string) => {}
+    public onCloseCall = () => {}
 
     // datachannels
     private dataChannel : RTCDataChannel | undefined;
@@ -257,7 +258,6 @@ class RtcConnection {
                 }
             }
           }
-
     }
 
     // ask for permission to start a connection with the receiving peer via the server
@@ -323,6 +323,10 @@ class RtcConnection {
                 console.error('Error adding received ice candidate', e);
             }
         }
+    }
+
+    public async handleCloseCall() {
+
     }
 
     // close a connection with a peer

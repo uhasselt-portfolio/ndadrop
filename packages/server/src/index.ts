@@ -132,6 +132,19 @@ io.on('connection', (socket) => {
 		}
 	});
 
+	socket.on('leave-private-chat', (msg : {peer : any}) => {
+		console.log("leaving private chat with: " + msg.peer);
+		const id = socket.id;
+		const sender = room.getMember(id);
+
+		const receiver = room.getMemberByName(msg.peer);
+		if(receiver){
+			console.log("leaving private chat with member: " + receiver.name);
+			const receiverSocketId = receiver.socketId;
+			socket.to(receiverSocketId).emit('leave-private-chat', {peer : sender?.name});
+		}
+	});
+
 	socket.on('globalMessage', (msg : {message : string, sender : string}) => {
 		const id = socket.id;
 		const sender = room.getMember(id);
