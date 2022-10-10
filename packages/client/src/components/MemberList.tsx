@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useContext, useState } from "preact/hooks";
-import { SocketContext, MemberListContext } from '../pages/App';
+import { MemberListContext, SocketContext } from '../pages/App';
 import Button from './Button';
 
 interface Props {

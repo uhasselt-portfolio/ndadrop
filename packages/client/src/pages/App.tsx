@@ -6,17 +6,30 @@ import { useState } from "preact/hooks";
 // Code-splitting is automated for `routes` directory
 import Home from '../routes/home';
 
+type MemberListState = {
+    members: string[];
+    setMembers: (members: string[]) => void;
+}
+
 const connection = io('http://localhost:9005', {
     transports: ['websocket'],
 });
-const [members, setMembers] = useState<string[]>([]);
+
 
 // Context
 const SocketContext = createContext(connection);
-const MemberListContext = createContext({members, setMembers});
+const MemberListContext = createContext<MemberListState>({
+    members: [],
+    setMembers: () => {}
+});
 
-const App = () => (
-	<div id="app">
+const App = () => {
+
+    // State
+    const [members, setMembers] = useState<string[]>([]);
+
+	return (
+        <div id="app">
         <SocketContext.Provider value={connection}>
             <MemberListContext.Provider value={{members, setMembers}}>
                 <Router>
@@ -26,7 +39,8 @@ const App = () => (
             </MemberListContext.Provider>
         </SocketContext.Provider>
     </div>
-);
+    )
+};
 
 export default App;
-export {SocketContext, MemberListContext}
+export {SocketContext, MemberListContext};
