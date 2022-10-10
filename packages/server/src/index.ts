@@ -7,8 +7,6 @@ import { adjectives, animals, uniqueNamesGenerator } from 'unique-names-generato
 import { config } from "./config";
 import RoomService from "./services/room.service";
 import FingerprintUtil from "./utils/fingerprint.util";
-import GroupChatService from "./services/groupChat.service";
-import { Member } from "./services/groupChat";
 
 const app = express();
 const server = http.createServer(app);
@@ -21,7 +19,6 @@ app.use(express.static('public'))
 
 // Instances
 const room = new RoomService();
-const groupChat = new GroupChatService();
 
 io.on('connection', (socket) => {
 
@@ -144,46 +141,6 @@ io.on('connection', (socket) => {
 			const receiverSocketId = receiver.socketId;
 			socket.to(receiverSocketId).emit('icecandidate', {peer : sender?.name, iceCandidate : msg.iceCandidate});
 		}
-	});
-
-	socket.on('createGroupChat', (msg : {groupName : string}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
-		const sender = room.getMember(id);
-		if (! sender) return;
-		console.log("member asking to create a group chat");
-		
-		const groupName = msg.groupName;
-
-		const groupChatId = groupChat.createGroupChat(groupName);
-
-		const member : Member = {
-			id : id,
-			name : sender?.name,
-			socketId : sender?.socketId
-		}
-		groupChat.joinGroupChat(groupChatId, member);
-
-	});
-
-	socket.on('joinGroupChat', (msg : {groupName : string}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
-		const sender = room.getMember(id);
-		if (! sender) return;
-		console.log("member asking to create a group chat");
-		
-		const groupName = msg.groupName;
-
-		const groupChatId = groupChat.getGroupChat(groupName);
-		if ( ! groupChatId) return;	// TODO : send error message
-
-		const member : Member = {
-			id : id,
-			name : sender?.name,
-			socketId : sender?.socketId
-		}
-		groupChat.joinGroupChat(groupChatId, member);
 	});
 
 });
