@@ -23,8 +23,7 @@ const room = new RoomService();
 io.on('connection', (socket) => {
 
 	socket.on('disconnect', () => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 
 		room.leave(id);
 
@@ -33,8 +32,7 @@ io.on('connection', (socket) => {
 
 	socket.on('join', (msg) => {
 
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
         const shortName = uniqueNamesGenerator({
             dictionaries: [adjectives, animals],
             separator: " ",
@@ -63,8 +61,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('askRTCPermission', (msg : {peer : any, msg : string}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		// console.log("member asking for a rtc connection from: " + sender?.name + " to: " + msg.peer + " with message: " + msg.msg);
 		//TODO: check if the peer is in the room
@@ -79,8 +76,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('permissionAnswer', (msg : {peer : any, accept : boolean}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		// console.log("member aswering the rtc connection from: " + sender?.name + " to: " + msg.peer + " answer: " + msg.accept);
 
@@ -92,8 +88,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('sdpOffer', (msg : {offer : any, peer : any}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		// console.log("member sending a sdp offer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.offer);
 		//TODO: check if the peer is in the room
@@ -108,8 +103,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('sdpAnswer', (msg : {answer : any, peer : any}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		// console.log("member sending a sdp answer from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.answer);
 		//TODO: check if the peer is in the room
@@ -124,8 +118,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('icecandidate', (msg : {iceCandidate: any, peer : any}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		// console.log("member sending an ice candidate from: " + sender?.name + " to: " + msg.peer + " with offer: " + msg.newIceCandidate);
 		//TODO: check if the peer is in the room
@@ -140,8 +133,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('globalMessage', (msg : {message : string, sender : string}) => {
-		const metadata = socket.handshake;
-		const id = FingerprintUtil.scanSocket(metadata);
+		const id = socket.id;
 		const sender = room.getMember(id);
 		io.to(room.getRoomId()).emit('globalBroadcast', {message : msg.message, sender : msg.sender });
 
