@@ -139,9 +139,11 @@ class RtcConnection {
                 this.dataChannel?.send('allChunksReceived');
                 this.waitingForFile = false;
                 this.onGetFile(temp, this.fileName_received);
+                this.fileChunks_received = [];
             } else {
                 // if not, send a message that there was a dataerror
                 this.dataChannel?.send('dataerror');
+                this.fileChunks_received = [];
             }
             return;
         }

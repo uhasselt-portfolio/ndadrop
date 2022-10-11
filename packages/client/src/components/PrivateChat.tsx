@@ -89,7 +89,7 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const onGetFile = (fileData : string, fileName : string) => {
-
+		console.log("got file", fileData, fileName);
 		setMessages(m => [...m, {
 			type: "file",
 			own: false,
@@ -100,6 +100,7 @@ const PrivateChat = (props: Props) => {
 
 	// Helpers
 	const downloadFile = (message: Message) => {
+		console.log("downloading file ", message);
 		if (message.type != 'file') return;
 		let url = message.fileData;
 		let a = document.createElement('a');
