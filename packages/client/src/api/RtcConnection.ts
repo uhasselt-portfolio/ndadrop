@@ -183,6 +183,7 @@ class RtcConnection {
 
         // add local stream related stuff, when it's a video chat
         if (this.videoCall) {
+            console.log("creating video")
             if (!this.localStream) {
                 if (hascameraacces) {
                     this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
@@ -207,6 +208,7 @@ class RtcConnection {
         }
 
         this.pc.onicecandidate = async (event) => {
+            console.log("on ice candiate", event);
             if(event.candidate){
                 // send ice candidate to other peer
                 if (event.candidate != null) {
@@ -276,11 +278,13 @@ class RtcConnection {
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
+        console.log("asking for permission");
         socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants', videoCall : this.videoCall});
     }
 
     // receive a permission request from another peer via the server
     public async receivePermissionQuestion(msg: any, socket : any, accept: boolean) { //TODO : FIX any
+        console.log("got a question, arriving peer ", msg.permissionState.sessionOwner)
         // check if we want to accept the connection
         const peer = msg.peer;
 
@@ -290,6 +294,7 @@ class RtcConnection {
 
     // Send SDP offer to the peer
     public async SendSDP(socket : any, peer : any) { //TODO : FIX any
+        console.log("sending SDP offer to the peer ", peer)
         await this.createPeerConnection(socket, peer);
 
 
@@ -304,6 +309,7 @@ class RtcConnection {
 
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
+        console.log("sending SDP answer to the peer")
         await this.createPeerConnection(socket, remoteOffer.peer, false);
 
 
@@ -319,6 +325,7 @@ class RtcConnection {
     }
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
+        console.log("handleSdpAnswer", msg.answer);
         if (! this.pc.currentRemoteDescription) {
             console.log("receiving sdpAnswer", this.pc);
             await this.pc.setRemoteDescription(msg.answer);
@@ -329,6 +336,7 @@ class RtcConnection {
 
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
+        console.log("receiving ice candidate", msg.iceCandidate);
         if (msg.iceCandidate) {
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
