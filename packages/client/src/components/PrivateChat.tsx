@@ -4,7 +4,8 @@ import RtcConnection from '../api/RtcConnection';
 import { SocketContext } from '../pages/App';
 import Button from './Button';
 import FileUpload from './FileUpload';
-import { Check, X } from 'lucide-preact';
+import { Check, X, PhoneOff, Send, Upload, Download } from 'lucide-preact';
+import clsx from 'clsx';
 
 type ChatModes = {
     text : boolean,
@@ -57,7 +58,7 @@ const PrivateChat = (props: Props) => {
 
     const [message, setMessage] = useState<string>("");
     const [messages, setMessages] = useState<Message[]>([]);
-	const [choosingFile, setChoosingFile] = useState<boolean>(false);
+	const [chosenFile, setChosenFile] = useState<File | null>(null);
 
 	const [answerCallStatus, setAnswerCallStatus] = useState<AnswerCallStatus>(props.isCaller ? AnswerCallStatus.WAITING : AnswerCallStatus.PENDING);
 
@@ -69,9 +70,15 @@ const PrivateChat = (props: Props) => {
     // Handlers
     const onChatSend = (e: any) => {
 		e.preventDefault();
-		rtcCon.sendMessageThroughDataChannel(message);
-		setMessages(m => [...m, {type : "text", payload : message, own : true}]);
-		setMessage("");
+
+		if (chosenFile) {
+			sendFile(chosenFile);
+			setChosenFile(null);
+		} else {
+			rtcCon.sendMessageThroughDataChannel(message);
+			setMessages(m => [...m, {type : "text", payload : message, own : true}]);
+			setMessage("");
+		}
 	}
 
 	const onTyping = (e: any) => {
@@ -112,6 +119,10 @@ const PrivateChat = (props: Props) => {
     const sendFile = (File : File) => {
 		rtcCon.sendFileThroughDataChannel(File);
 		return true
+	}
+
+	const fileSelected = (file : File) => {
+		setChosenFile(file);
 	}
 
 	const leaveCall = () => {
@@ -179,48 +190,68 @@ const PrivateChat = (props: Props) => {
     const renderMessages = () => {
 		if (messages.length === 0) {
 			return (
-				<li>
+				<div class='italic text-gray-600 py-2'>
 					Be the first one to say something!
-				</li>
+				</div>
 			);
 		}
 
-        const renderMessage = (message : Message) => {
+        const renderMessage = (message : Message, index: number) => {
 			if (message.type === "file") return null;
 
 			const isOwn = message.own;
-			const style = isOwn ? "color:blue;" : "color:red;";
+			const sender = message.own ? 'You' : props.peer;
+			const style = clsx(
+				"p-2 rounded-lg flex flex-col w-full",
+				isOwn ? "bg-blue-200" : "bg-gray-200"
+			);
 
 			return (
-				<div style={style}>
-					{message.payload}
+				<div class={style} key={index}>
+					<div class='text-sm italic text-gray-500'>{sender}</div>
+					<div>{message.payload}</div>
 				</div>
 			)
         }
 
-		const renderFile = (message : Message) => {
+		const renderFile = (message : Message, index: number) => {
 			if (message.type === "text") return null;
 
 			const isOwn = message.own;
-			const style = isOwn ? "color:blue;" : "color:red;";
+			const sender = message.own ? 'You' : props.peer;
+			const style = clsx(
+				"p-2 rounded-lg flex flex-row w-full",
+				isOwn ? "bg-blue-200" : "bg-gray-200"
+			);
+
+			const download = isOwn ? null : <Download onClick={() => downloadFile(message)} size={16} />
 
 			return (
-				<div>
-					<div style={style}>
-						File: {message.fileName}
+				<div class='flex flex-row w-full'>
+					<div class={style} key={index}>
+						<div class='flex flex-col w-full'>
+							<div class='text-sm italic text-gray-500 w-full'>{sender}</div>
+							<div>{message.fileName}</div>
+						</div>
+						<div class='flex items-center justify-end cursor-pointer hover:text-blue-500'>
+							{download}
+						</div>
 					</div>
-					<button onClick={() => {downloadFile(message)}}>Download</button>
 				</div>
 			)
 		}
 
-		return messages.map((message: Message) => {
+		const texts =  messages.map((message: Message, index: number) => {
 			return (
-				<li>
-					{message.type === "text" ? renderMessage(message) : renderFile(message)}
-				</li>
+				<div class='flex flex-col'>
+					{message.type === "text" ? renderMessage(message, index) : renderFile(message, index)}
+				</div>
 			);
 		});
+
+		return <div class='flex flex-col w-full gap-2 overflow-auto max-h-[230px]'>
+			{texts}
+		</div>
 	}
 
     const renderVideo = () => {
@@ -234,54 +265,50 @@ const PrivateChat = (props: Props) => {
 		}
 
 		return (
-			<div>
-				Yourself:
-				<video ref={videoLocal} id={"local-id"} autoPlay></video>
-				remote:
-				<video ref={videoRemote} id={"remote-id"} autoPlay></video>
+			<div class='flex flex-row'>
+				<div class='flex flex-col gap-3'>
+					<span class='flex justify-center text-lg italic'>You</span>
+					<video class='flex w-auto h-[200px]' ref={videoLocal} id={"local-id"} autoPlay></video>
+				</div>
+				<div class='flex flex-col gap-3'>
+					<span class='flex justify-center text-lg italic'>{props.peer}</span>
+					<video class='flex w-auto h-[200px]' ref={videoRemote} id={"remote-id"} autoPlay></video>
+				</div>
 			</div>
 
 		);
 	}
 
-	const renderFilePicker = () => {
-		return(
-			<div>
-				<FileUpload uploadFile={sendFile} />
-				{/* <button onClick={() => setChoosingFile(false)}>Cancel</button> */}
-			</div>
-		)
-	}
-
 	const renderMessaging = () => {
+
+		const dynamicFileUploadStyling = clsx(
+			"rounded-lg p-2",
+			chosenFile === null && " bg-black text-white cursor-pointer",
+			chosenFile !== null && " bg-gray-200 text-black cursor-not-allowed"
+		);
+
 		return(
-			<div>
-				{//! choosingFile &&
-					<div>
-						<input
-						onChange={(e) => onTyping(e)}
-						value={message}
-						type="text"
-						/>
-						<button onClick={onChatSend}>Send</button>
-						{/* <button onClick={() => setChoosingFile(true)}>Send file</button> */}
-					</div>
-				}
-
-				{/* {choosingFile && renderFilePicker()} */}
-				{renderFilePicker()}
-				{renderMessages()}
-			</div>
-		)
-	}
-
-	const renderTransferedFiles = () => {
-		return (
-			<div>
-				<h3>Received files</h3>
-				{/* {renderReceivedFiles()} */}
-				<h3>Sent files</h3>
-				{/* {renderSendFiles()} */}
+			<div class='flex flex-col gap-2 bg-white p-3 w-[450px] rounded-lg shadow-sm border'>
+				<div class='overflow-auto max-h-[250px]'>
+					{renderMessages()}
+				</div>
+				<div class='flex flex-row gap-2 w-full'>
+					<input
+					class=' p-2 bg-slate-100 rounded-lg w-full'
+					placeholder={chosenFile ? chosenFile.name : 'Type a message...'}
+					disabled={chosenFile !== null}
+					onChange={(e) => onTyping(e)}
+					onKeyUp={(e) => e.key == 'Enter' && onChatSend(e)}
+					value={message}
+					type="text"
+					/>
+					<button class='p-2 bg-black rounded-lg text-white' onClick={onChatSend}>
+						<Send color="white" size={16}/>
+					</button>
+					<button class={dynamicFileUploadStyling}>
+						<FileUpload uploadFile={sendFile} fileSelected={fileSelected} />
+					</button>
+				</div>
 			</div>
 		)
 	}
@@ -397,11 +424,14 @@ const PrivateChat = (props: Props) => {
 
 	const renderPrivateChat = () => {
 		return (
-			<div>
-				<h1>Private Chat</h1>
+			<div class='flex flex-col gap-4 bg-white p-7 w-[750px] rounded-lg shadow-sm items-center'>
+				<span class='flex justify-center text-3xl p-5 font-bold'>Private Chat</span>
 				{props.chatModes.video && renderVideo()}
 				{props.chatModes.text && renderMessaging()}
-				{<button onClick={leaveCall}>Leave call</button>}
+				{<div class='flex flex-row items-center justify-center bg-red-400 text-white rounded-lg p-2 font-bold cursor-pointer gap-3 w-full' onClick={leaveCall}>
+					<PhoneOff size={16}/>
+					<span>Leave call</span>
+				</div>}
 			</div>
 		);
 	}
