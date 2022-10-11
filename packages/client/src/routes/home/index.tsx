@@ -51,7 +51,6 @@ const Home = () => {
 	// WebRTC Handlers
 	const handlePermissionRequest = async () => {
 		socket.on('RTCPermissionRequest', (msg : {peer : any, accept : boolean, videoCall : boolean}) => {
-			console.log("Received permission reques ", msg);
 			setIsInPrivateChat(true);
 			setPrivateChatIsCaller(false);
 			setPrivateChatPeer(msg.peer);

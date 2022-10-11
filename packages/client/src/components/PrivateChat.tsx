@@ -96,7 +96,7 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const onGetFile = (fileData : string, fileName : string) => {
-
+		console.log("got file", fileData, fileName);
 		setMessages(m => [...m, {
 			type: "file",
 			own: false,
@@ -107,6 +107,7 @@ const PrivateChat = (props: Props) => {
 
 	// Helpers
 	const downloadFile = (message: Message) => {
+		console.log("downloading file ", message);
 		if (message.type != 'file') return;
 		let url = message.fileData;
 		let a = document.createElement('a');
@@ -125,12 +126,11 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const leaveCall = () => {
-		// TODO : close webrtc connections
 
 		// send via socket that I leave the call
 		socket.emit('leave-private-chat', {peer : props.peer});
 
-
+		rtcCon.handleCloseCall();
 
 		props.updateIsInPrivateChat(false);
 	}
@@ -182,6 +182,7 @@ const PrivateChat = (props: Props) => {
 	const handleCloseCall = async () => {
 		socket.on('leave-private-chat', (msg : {peer : any}) => {
 			props.updateIsInPrivateChat(false);
+			rtcCon.handleCloseCall();
 		});
 	}
 
