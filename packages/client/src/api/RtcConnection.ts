@@ -12,7 +12,7 @@ interface Props {
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]};
-    pc : RTCPeerConnection = new RTCPeerConnection();
+    pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
 
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
