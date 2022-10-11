@@ -438,6 +438,7 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const render = () => {
+		console.log("rtcCon : ", rtcCon);
 		return (
 			<div class='flex justify-center'>
 				{answerCallStatus === AnswerCallStatus.WAITING && renderWaitingForAnswer()}
