@@ -280,6 +280,13 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const renderMessaging = () => {
+
+		const dynamicFileUploadStyling = clsx(
+			"rounded-lg p-2",
+			chosenFile === null && " bg-black text-white cursor-pointer",
+			chosenFile !== null && " bg-gray-200 text-black cursor-not-allowed"
+		);
+
 		return(
 			<div class='flex flex-col gap-2 bg-white p-3 w-[450px] rounded-lg shadow-sm border'>
 				<div class='overflow-auto max-h-[250px]'>
@@ -298,7 +305,7 @@ const PrivateChat = (props: Props) => {
 					<button class='p-2 bg-black rounded-lg text-white' onClick={onChatSend}>
 						<Send color="white" size={16}/>
 					</button>
-					<button class='p-2 bg-black rounded-lg text-white'>
+					<button class={dynamicFileUploadStyling}>
 						<FileUpload uploadFile={sendFile} fileSelected={fileSelected} />
 					</button>
 				</div>
