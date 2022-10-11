@@ -187,30 +187,31 @@ class RtcConnection {
         // add remote stream to video element
 
         // add local stream related stuff, when it's a video chat
-        if (this.videoCall) {
-            console.log("creating video")
-            if (!this.localStream) {
-                if (hascameraacces) {
-                    this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
-                    this.onLocalStreamSet(this.localStream);
-                }
-            }
+        // if (this.videoCall) {
+        //     console.log("creating video", hascameraacces)
+        //     if (!this.localStream) {
+        //         if (hascameraacces) {
+        //             this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
+        //             this.onLocalStreamSet(this.localStream);
+        //         }
+        //     }
     
-            if (this.localStream) {
-                this.localStream.getTracks().forEach((track) => {
-                    if (this.localStream) {
-                        this.pc.addTrack(track, this.localStream)
-                    }
-                })
-            }
+        //     if (this.localStream) {
+        //         this.localStream.getTracks().forEach((track) => {
+        //             if (this.localStream) {
+        //                 this.pc.addTrack(track, this.localStream)
+        //             }
+        //         })
+        //     }
     
-            this.pc.ontrack = (event) => {
-                event.streams[0].getTracks().forEach((track) => {
-                    if (this.remoteStream)
-                        this.remoteStream.addTrack(track)
-                })
-            }
-        }
+        //     this.pc.ontrack = (event) => {
+        //         console.log("pc ontrack")
+        //         event.streams[0].getTracks().forEach((track) => {
+        //             if (this.remoteStream)
+        //                 this.remoteStream.addTrack(track)
+        //         })
+        //     }
+        // }
 
         this.pc.onicecandidate = async (event) => {
             if(event.candidate){
@@ -223,7 +224,6 @@ class RtcConnection {
 
         // test datachannel
         // for testing we use cameraccess
-        let isCaller = hascameraacces;  // TODO
         if (this.isCaller) {
             this.dataChannel = this.pc.createDataChannel("datachannel");
             this.dataChannel.binaryType = "arraybuffer";
