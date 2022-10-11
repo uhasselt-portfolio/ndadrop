@@ -12,13 +12,15 @@ interface Props {
 class RtcConnection {
 
     pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]};
-    pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
+    pc : RTCPeerConnection = new RTCPeerConnection();
 
     private localStream : MediaStream | undefined;
     private remoteStream : MediaStream | undefined;
 
     public videoCall : boolean = false;
     private isCaller : boolean = false;
+
+    private iceCandidates : RTCIceCandidate[] = [];
 
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
@@ -204,10 +206,12 @@ class RtcConnection {
             }
             this.pc.ontrack = (event) => {
                 console.log("pc ontrack")
-                event.streams[0].getTracks().forEach((track) => {
-                    if (this.remoteStream)
-                        this.remoteStream.addTrack(track)
-                })
+                this.remoteStream = event.streams[0];
+                this.onRemoteStreamSet(this.remoteStream);
+                // event.streams[0].getTracks().forEach((track) => {
+                //     if (this.remoteStream)
+                //         this.remoteStream.addTrack(track)
+                // })
             }
         }
 
@@ -296,11 +300,18 @@ class RtcConnection {
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
         await this.createPeerConnection(socket, remoteOffer.peer);
 
+        console.log(" before sending sdp answer", remoteOffer.offer)
         try {
             await this.pc.setRemoteDescription(remoteOffer.offer);
+            // add all the saved ice candidates
+            for (let candidate of this.iceCandidates) {
+                await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
         } catch (e) {
             console.log("Couldn't set remote Description", e);
         }
+
+        console.log("hey",this.pc.remoteDescription);
         
         let tempAnswer = await this.pc.createAnswer();
         await this.pc.setLocalDescription(tempAnswer);
@@ -317,6 +328,10 @@ class RtcConnection {
         console.log("##3 handleSdpAnswer", msg)
         if (! this.pc.currentRemoteDescription) {
             await this.pc.setRemoteDescription(msg.answer);
+            // add all the saved ice candidates
+            for (let candidate of this.iceCandidates) {
+                await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
         }
 
         return
@@ -324,12 +339,17 @@ class RtcConnection {
 
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
-        console.log("##1.5 receiveIceCandidate", msg);
-        if (msg.iceCandidate) {
-            try {
-                await this.pc.addIceCandidate(msg.iceCandidate);
-            } catch (e) {
-                console.error('Error adding received ice candidate', e);
+        console.log("##1.5 receiveIceCandidate", msg, this.pc.remoteDescription);
+        if (!this.pc.remoteDescription) {
+            console.log("saving ice candidate")
+            this.iceCandidates.push(msg.iceCandidate);
+        } else {
+            if (msg.iceCandidate) {
+                try {
+                    await this.pc.addIceCandidate(msg.iceCandidate);
+                } catch (e) {
+                    console.error('Error adding received ice candidate', e);
+                }
             }
         }
     }
