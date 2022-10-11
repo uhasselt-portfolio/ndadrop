@@ -11,7 +11,22 @@ interface Props {
 
 class RtcConnection {
 
-    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]};
+    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"},
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+      }]};
     pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
 
     private localStream : MediaStream | undefined;
@@ -288,7 +303,7 @@ class RtcConnection {
         } catch (e) {
             console.log("Couldn't set Local Description", e);
         }
-        
+
         // send offer to peer
         console.log("##1 sending offer", offer);
         socket.emit('sdpOffer', {offer, peer});
@@ -312,7 +327,7 @@ class RtcConnection {
         }
 
         console.log("hey",this.pc.remoteDescription);
-        
+
         let tempAnswer = await this.pc.createAnswer();
         await this.pc.setLocalDescription(tempAnswer);
 
