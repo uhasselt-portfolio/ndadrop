@@ -118,6 +118,10 @@ const PrivateChat = (props: Props) => {
 
     const sendFile = (File : File) => {
 		rtcCon.sendFileThroughDataChannel(File);
+
+		// add own message
+		
+
 		return true
 	}
 
@@ -317,7 +321,6 @@ const PrivateChat = (props: Props) => {
     // setup the rtc connection
 
 	useEffect(() => {
-		console.log("private chat useeffect", socket._callbacks);
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
 		rtcCon.onCloseCall = handleCloseCall;
@@ -358,8 +361,6 @@ const PrivateChat = (props: Props) => {
 			socket.off("sdpAnswer");
 			socket.off("icecandidate");
 			socket.off("leavePrivateChat");
-
-			console.log("private chat useeffect cleanup", socket._callbacks);
 
 			// this is copilot => is this needed.
 			// videoLocal.current?.remove();

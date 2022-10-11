@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useContext, useState } from "preact/hooks";
+import { useContext, useEffect, useState } from "preact/hooks";
 import { MemberListContext, SocketContext } from '../pages/App';
 import Button from './Button';
 import { Phone, Video } from 'lucide-preact';
@@ -18,12 +18,22 @@ const MemberList = (props: Props) => {
     // State
     // const [members, setMembers] = useState<string[]>([]);
 
-    // Render
-    const render = () => {
+    useEffect(() => {
 
         socket.on('members', (members: string[]) => {
             setMembers(members);
         });
+
+        return function cleanup() {
+            socket.off('mebmers');
+        }
+
+    },[]);
+
+    // Render
+    const render = () => {
+
+
 
         // Everyone except yourself
         const filteredMembers = members.filter(member => member !== props.ownName);
