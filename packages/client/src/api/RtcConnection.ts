@@ -11,7 +11,7 @@ interface Props {
 
 class RtcConnection {
 
-    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}], iceTransportPolicy: 'relay'};
+    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]};
     pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
 
     private localStream : MediaStream | undefined;
@@ -76,11 +76,9 @@ class RtcConnection {
             let fileName = "temp";
             if (this.file)
                 fileName = this.file.name;
-            // console.log("sending file", event, text);
             // this.dataChannel.send(fileName);
             let fileSize = text.length;
             // calculate the size of the file in bytes
-            // console.log("file size", fileSize);
             this.dataChannel.send(JSON.stringify({size : fileSize.toString(), name : fileName}));
         }
 
@@ -93,7 +91,6 @@ class RtcConnection {
         }
 
         // using JSON.stringify for chrome!
-        // console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
 
         var remainingDataURL = text.slice(fileMessage.data.length);
@@ -137,8 +134,6 @@ class RtcConnection {
             // recreate the file
             let temp : string = this.fileChunks_received.join('');
 
-            // console.log("totla file size", temp.length, temp);
-
             // check if the complete file is received
             if (this.fileChunks_received.length * this.maxChunkSize >= this.fileSize_received) {
                 // send a message to the other peer that all chunks are received
@@ -172,7 +167,6 @@ class RtcConnection {
 
         // if we are waiting for a file, receive it
         if (this.waitingForFile) {
-            // console.log("file chunks recieved", this.fileChunks_received, "-", event.data);
             let chunk : FileMessage = JSON.parse(event.data);
             // add received chunk to the array
             this.fileChunks_received.push(chunk.data);
@@ -186,6 +180,11 @@ class RtcConnection {
         this.remoteStream = new MediaStream();
         this.onRemoteStreamSet(this.remoteStream);
         // add remote stream to video element
+
+        this.pc.addEventListener('connectionstatechange', (event) => {
+            console.log('connection connectionstatechange event: ', this.pc.connectionState);
+
+        });
 
         // add local stream related stuff, when it's a video chat
         if (this.videoCall) {
@@ -287,6 +286,7 @@ class RtcConnection {
         }
         
         // send offer to peer
+        console.log("##1 sending offer", offer);
         socket.emit('sdpOffer', {offer, peer});
 
         return
@@ -305,6 +305,8 @@ class RtcConnection {
         let tempAnswer = await this.pc.createAnswer();
         await this.pc.setLocalDescription(tempAnswer);
 
+        console.log("##2 sending answer", tempAnswer)
+
         // send answer to peer
         socket.emit('sdpAnswer', {answer : tempAnswer, peer : remoteOffer.peer});
 
@@ -312,6 +314,7 @@ class RtcConnection {
     }
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
+        console.log("##3 handleSdpAnswer", msg)
         if (! this.pc.currentRemoteDescription) {
             await this.pc.setRemoteDescription(msg.answer);
         }
@@ -321,7 +324,8 @@ class RtcConnection {
 
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
-        if (msg.iceCandidate && this.pc && this.pc.remoteDescription?.type) {
+        console.log("##1.5 receiveIceCandidate", msg);
+        if (msg.iceCandidate) {
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
             } catch (e) {
