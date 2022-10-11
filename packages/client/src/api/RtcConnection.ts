@@ -208,7 +208,6 @@ class RtcConnection {
         }
 
         this.pc.onicecandidate = async (event) => {
-            console.log("on ice candiate", event);
             if(event.candidate){
                 // send ice candidate to other peer
                 if (event.candidate != null) {
