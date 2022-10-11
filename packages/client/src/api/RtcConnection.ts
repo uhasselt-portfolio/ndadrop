@@ -48,6 +48,8 @@ class RtcConnection {
 
     // datachannelfuntions
     sendMessageThroughDataChannel(msg : string) {
+        console.log("this.textChannel", this.textChannel);
+
         this.textChannel?.send(msg);
     }
     onReadAsDataURL(event : ProgressEvent<FileReader> | null, text : any) {
@@ -90,16 +92,16 @@ class RtcConnection {
             fileMessage.data = text;
             // data.last = true;
         }
-    
+
         // using JSON.stringify for chrome!
         // console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
-    
+
         var remainingDataURL = text.slice(fileMessage.data.length);
         if (remainingDataURL.length) {
             setTimeout(() => {
                 this.onReadAsDataURL(null, remainingDataURL); // continue transmitting
-            }, 500) 
+            }, 500)
         } else {
             this.dataChannel.send('fileSent');
         }
@@ -156,7 +158,7 @@ class RtcConnection {
         // check if the other party is willing to send a file
         if (event.data == 'FileIncoming') {
             this.waitingForFileSize = true;
-            return; 
+            return;
         }
 
         // if we are waiting for the filesize, we have to check if the message is a number
@@ -187,31 +189,31 @@ class RtcConnection {
         // add remote stream to video element
 
         // add local stream related stuff, when it's a video chat
-        // if (this.videoCall) {
-        //     console.log("creating video", hascameraacces)
-        //     if (!this.localStream) {
-        //         if (hascameraacces) {
-        //             this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
-        //             this.onLocalStreamSet(this.localStream);
-        //         }
-        //     }
-    
-        //     if (this.localStream) {
-        //         this.localStream.getTracks().forEach((track) => {
-        //             if (this.localStream) {
-        //                 this.pc.addTrack(track, this.localStream)
-        //             }
-        //         })
-        //     }
-    
-        //     this.pc.ontrack = (event) => {
-        //         console.log("pc ontrack")
-        //         event.streams[0].getTracks().forEach((track) => {
-        //             if (this.remoteStream)
-        //                 this.remoteStream.addTrack(track)
-        //         })
-        //     }
-        // }
+        if (this.videoCall) {
+            console.log("creating video", hascameraacces)
+            if (!this.localStream) {
+                if (hascameraacces) {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
+                    this.onLocalStreamSet(this.localStream);
+                }
+            }
+
+            if (this.localStream) {
+                this.localStream.getTracks().forEach((track) => {
+                    if (this.localStream) {
+                        this.pc.addTrack(track, this.localStream)
+                    }
+                })
+            }
+
+            this.pc.ontrack = (event) => {
+                console.log("pc ontrack")
+                event.streams[0].getTracks().forEach((track) => {
+                    if (this.remoteStream)
+                        this.remoteStream.addTrack(track)
+                })
+            }
+        }
 
         this.pc.onicecandidate = async (event) => {
             if(event.candidate){
@@ -271,6 +273,8 @@ class RtcConnection {
                         this.receiveThroughDataChannel(event);
                     };
                 } else if (event.channel.label === "textchannel") {
+                    console.log("event", event);
+
                     this.textChannel = event.channel;
                     this.textChannel.onmessage = (event :  MessageEvent<any>) => {
                         this.onGetMessage(event.data);
