@@ -2,7 +2,7 @@ import { h } from 'preact';
 import { useContext, useEffect, useState } from "preact/hooks";
 import { MemberListContext, SocketContext } from '../pages/App';
 import Button from './Button';
-import { Phone, Video } from 'lucide-preact';
+import { MessageSquare, Video } from 'lucide-preact';
 
 interface Props {
     ownName: string;
@@ -42,7 +42,7 @@ const MemberList = (props: Props) => {
             return <div class='flex flex-row gap-3' key={member}>
                 <div>{member}</div>
                 <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member, false)}>
-                    <Phone color="white" size={16}/>
+                    <MessageSquare color="white" size={16}/>
                 </Button>
                 <Button size='sm' type='primary-dark-2' onClick={() => props.onDirectChatClick(member, true)}>
                     <Video color="white" size={16}/>
