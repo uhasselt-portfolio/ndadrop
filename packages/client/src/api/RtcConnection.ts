@@ -11,7 +11,7 @@ interface Props {
 
 class RtcConnection {
 
-    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}]}
+    pcConfig : RTCConfiguration = {"iceServers": [{urls: "stun:stun.l.google.com:19302"}], iceTransportPolicy: 'relay'};
     pc : RTCPeerConnection = new RTCPeerConnection(this.pcConfig);
 
     private localStream : MediaStream | undefined;
@@ -48,6 +48,7 @@ class RtcConnection {
 
     // datachannelfuntions
     sendMessageThroughDataChannel(msg : string) {
+        console.log("sendMessageThroughDataChannel", this.textChannel);
         this.textChannel?.send(msg);
     }
     onReadAsDataURL(event : ProgressEvent<FileReader> | null, text : any) {
@@ -187,31 +188,31 @@ class RtcConnection {
         // add remote stream to video element
 
         // add local stream related stuff, when it's a video chat
-        // if (this.videoCall) {
-        //     console.log("creating video", hascameraacces)
-        //     if (!this.localStream) {
-        //         if (hascameraacces) {
-        //             this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
-        //             this.onLocalStreamSet(this.localStream);
-        //         }
-        //     }
+        if (this.videoCall) {
+            console.log("creating video", hascameraacces)
+            if (!this.localStream) {
+                if (hascameraacces) {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true})
+                    this.onLocalStreamSet(this.localStream);
+                }
+            }
     
-        //     if (this.localStream) {
-        //         this.localStream.getTracks().forEach((track) => {
-        //             if (this.localStream) {
-        //                 this.pc.addTrack(track, this.localStream)
-        //             }
-        //         })
-        //     }
+            if (this.localStream) {
+                this.localStream.getTracks().forEach((track) => {
+                    if (this.localStream) {
+                        this.pc.addTrack(track, this.localStream)
+                    }
+                })
+            }
     
-        //     this.pc.ontrack = (event) => {
-        //         console.log("pc ontrack")
-        //         event.streams[0].getTracks().forEach((track) => {
-        //             if (this.remoteStream)
-        //                 this.remoteStream.addTrack(track)
-        //         })
-        //     }
-        // }
+            this.pc.ontrack = (event) => {
+                console.log("pc ontrack")
+                event.streams[0].getTracks().forEach((track) => {
+                    if (this.remoteStream)
+                        this.remoteStream.addTrack(track)
+                })
+            }
+        }
 
         this.pc.onicecandidate = async (event) => {
             if(event.candidate){
@@ -225,6 +226,7 @@ class RtcConnection {
         // test datachannel
         // for testing we use cameraccess
         if (this.isCaller) {
+            console.log("creating data channels");
             this.dataChannel = this.pc.createDataChannel("datachannel");
             this.dataChannel.binaryType = "arraybuffer";
             this.textChannel = this.pc.createDataChannel("textchannel");
@@ -237,31 +239,9 @@ class RtcConnection {
             this.textChannel.onmessage = (event :  MessageEvent<any>) => {
                 this.onGetMessage(event.data);
             }
-            // this.dataChannel.onopen = this.handleDataChannelStatusChange;
-            // this.dataChannel.onopen = (event :  Event) => {
-            //     if (this.dataChannel) {
-
-            //         var state = this.dataChannel.readyState;
-
-            //         if (state === "open") {
-            //             console.log("dataChannel open");
-            //         } else {
-            //             console.log("dataChannel closed");
-            //         }
-            //     }
-            // }
-            // this.dataChannel.onclose = (event :  Event) => {
-            //     if (this.dataChannel) {
-
-            //         var state = this.dataChannel.readyState;
-
-            //         if (state === "open") {
-            //             console.log("dataChannel open");
-            //         } else {
-            //             console.log("dataChannel closed");
-            //         }
-            //     }
-            // };
+            this.textChannel.onopen = () => {
+                console.log("textchannel open")
+            }
           } else {
             this.pc.ondatachannel = (event : RTCDataChannelEvent) => {
                 if (event.channel.label === "datachannel") {
@@ -282,13 +262,11 @@ class RtcConnection {
 
     // ask for permission to start a connection with the receiving peer via the server
     public async askForPermission(member : any, socket : any) {   //TODO : FIX any
-        console.log("asking for permission");
         socket.emit('askRTCPermission', {peer : member, msg : 'content (mayby say the kind of connection it wants', videoCall : this.videoCall});
     }
 
     // receive a permission request from another peer via the server
     public async receivePermissionQuestion(msg: any, socket : any, accept: boolean) { //TODO : FIX any
-        console.log("got a question, arriving peer ", msg)
         // check if we want to accept the connection
         const peer = msg.peer;
 
@@ -298,13 +276,16 @@ class RtcConnection {
 
     // Send SDP offer to the peer
     public async SendSDP(socket : any, peer : any) { //TODO : FIX any
-        console.log("sending SDP offer to the peer ", peer)
         await this.createPeerConnection(socket, peer);
 
 
         let offer = await this.pc.createOffer();
-        await this.pc.setLocalDescription(offer);
-
+        try {
+            await this.pc.setLocalDescription(offer);
+        } catch (e) {
+            console.log("Couldn't set Local Description", e);
+        }
+        
         // send offer to peer
         socket.emit('sdpOffer', {offer, peer});
 
@@ -313,12 +294,14 @@ class RtcConnection {
 
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
-        console.log("sending SDP answer to the peer")
         await this.createPeerConnection(socket, remoteOffer.peer);
 
-
-        await this.pc.setRemoteDescription(remoteOffer.offer);
-
+        try {
+            await this.pc.setRemoteDescription(remoteOffer.offer);
+        } catch (e) {
+            console.log("Couldn't set remote Description", e);
+        }
+        
         let tempAnswer = await this.pc.createAnswer();
         await this.pc.setLocalDescription(tempAnswer);
 
@@ -329,9 +312,7 @@ class RtcConnection {
     }
 
     public async handleSdpAnswer(socket : any, msg : {peer : any, answer : RTCSessionDescription}) {
-        console.log("handleSdpAnswer", msg.answer);
         if (! this.pc.currentRemoteDescription) {
-            console.log("receiving sdpAnswer", this.pc);
             await this.pc.setRemoteDescription(msg.answer);
         }
 
@@ -340,8 +321,7 @@ class RtcConnection {
 
     // receive an ice candidate from a peer
     public async receiveIceCandidate(msg : {iceCandidate : RTCIceCandidate, peer : any}) {
-        console.log("receiving ice candidate", msg.iceCandidate);
-        if (msg.iceCandidate) {
+        if (msg.iceCandidate && this.pc && this.pc.remoteDescription?.type) {
             try {
                 await this.pc.addIceCandidate(msg.iceCandidate);
             } catch (e) {
