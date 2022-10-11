@@ -298,13 +298,13 @@ const PrivateChat = (props: Props) => {
 				</div>
 				<div class='flex flex-row gap-2 w-full'>
 					<input
-					class=' p-2 bg-slate-100 rounded-lg w-full'
-					placeholder={chosenFile ? chosenFile.name : 'Type a message...'}
-					disabled={chosenFile !== null}
-					onChange={(e) => onTyping(e)}
-					onKeyUp={(e) => e.key == 'Enter' && onChatSend(e)}
-					value={message}
-					type="text"
+						class=' p-2 bg-slate-100 rounded-lg w-full'
+						placeholder={chosenFile ? chosenFile.name : 'Type a message...'}
+						disabled={chosenFile !== null}
+						onChange={(e) => onTyping(e)}
+						onKeyUp={(e) => e.key == 'Enter' && onChatSend(e)}
+						value={message}
+						type="text"
 					/>
 					<button class='p-2 bg-black rounded-lg text-white' onClick={onChatSend}>
 						<Send color="white" size={16}/>
