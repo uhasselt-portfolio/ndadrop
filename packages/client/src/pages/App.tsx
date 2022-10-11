@@ -11,8 +11,8 @@ type MemberListState = {
     setMembers: (members: string[]) => void;
 }
 
-// const connection = io('https://webtech.edm.uhasselt.be:8105', {
-const connection = io('http://localhost:9005', {
+const connection = io('https://webtech.edm.uhasselt.be:8105', {
+// const connection = io('http://localhost:9005', {
     transports: ['websocket'],
 });
 

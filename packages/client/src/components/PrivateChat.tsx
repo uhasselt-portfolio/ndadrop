@@ -52,7 +52,7 @@ const PrivateChat = (props: Props) => {
     const socket = useContext(SocketContext);
 
     // state
-	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection());
+	const [rtcCon, setRtcCon] = useState<RtcConnection>(new RtcConnection(props.isCaller));
 	const [localStream, setLocalStream] = useState<MediaStream>();
 	const [remoteStream, setRemoteStream] = useState<MediaStream>();
 

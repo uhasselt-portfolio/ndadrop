@@ -18,6 +18,7 @@ class RtcConnection {
     private remoteStream : MediaStream | undefined;
 
     public videoCall : boolean = false;
+    private isCaller : boolean = false;
 
     // Handler
     public onLocalStreamSet = (stream : MediaStream) => {}
@@ -39,6 +40,10 @@ class RtcConnection {
     private fileChunks_received : string[] = [];
     private waitingForFileSize : boolean = false;
     private waitingForFile : boolean = false;
+
+    public constructor(isCaller : boolean) {
+        this.isCaller = isCaller;
+    }
 
 
     // datachannelfuntions
@@ -219,7 +224,7 @@ class RtcConnection {
         // test datachannel
         // for testing we use cameraccess
         let isCaller = hascameraacces;  // TODO
-        if (isCaller) {
+        if (this.isCaller) {
             this.dataChannel = this.pc.createDataChannel("datachannel");
             this.dataChannel.binaryType = "arraybuffer";
             this.textChannel = this.pc.createDataChannel("textchannel");
@@ -283,7 +288,7 @@ class RtcConnection {
 
     // receive a permission request from another peer via the server
     public async receivePermissionQuestion(msg: any, socket : any, accept: boolean) { //TODO : FIX any
-        console.log("got a question, arriving peer ", msg.permissionState.sessionOwner)
+        console.log("got a question, arriving peer ", msg)
         // check if we want to accept the connection
         const peer = msg.peer;
 
@@ -309,7 +314,7 @@ class RtcConnection {
     // Send SDP answer to the peer
     public async sendSDPAnswer(socket : any, remoteOffer : {peer : any, offer : RTCSessionDescription}) { //TODO : FIX any
         console.log("sending SDP answer to the peer")
-        await this.createPeerConnection(socket, remoteOffer.peer, false);
+        await this.createPeerConnection(socket, remoteOffer.peer);
 
 
         await this.pc.setRemoteDescription(remoteOffer.offer);
