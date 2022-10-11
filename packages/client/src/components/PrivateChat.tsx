@@ -128,7 +128,7 @@ const PrivateChat = (props: Props) => {
 	const leaveCall = () => {
 
 		// send via socket that I leave the call
-		socket.emit('leave-private-chat', {peer : props.peer});
+		socket.emit('leavePrivateChat', {peer : props.peer});
 
 		rtcCon.handleCloseCall();
 
@@ -180,7 +180,7 @@ const PrivateChat = (props: Props) => {
 	}
 
 	const handleCloseCall = async () => {
-		socket.on('leave-private-chat', (msg : {peer : any}) => {
+		socket.on('leavePrivateChat', (msg : {peer : any}) => {
 			props.updateIsInPrivateChat(false);
 			rtcCon.handleCloseCall();
 		});
@@ -317,6 +317,7 @@ const PrivateChat = (props: Props) => {
     // setup the rtc connection
 
 	useEffect(() => {
+		console.log("private chat useeffect", socket._callbacks);
 		rtcCon.onGetMessage = onGetMessage;
 		rtcCon.onGetFile = onGetFile;
 		rtcCon.onCloseCall = handleCloseCall;
@@ -335,15 +336,35 @@ const PrivateChat = (props: Props) => {
 		// sdpOffer : the sdpOffer information from a peer
 		// sdpAnswer : the sdpAnswer information from a peer
 		// iceCandidate : an iceCandidate from a peer
-		handlePermissionAnswer();
-		handleSdpOffer();
-		handleSdpAnswer();
-		handleIceCandidate();
-		handleCloseCall();
+		// if (socket._callbacks.$rtcPermissionAnswer === undefined) 
+			handlePermissionAnswer();
+		// if (socket._callbacks.$sdpOffer === undefined) 
+			handleSdpOffer();
+		// if (socket._callbacks.$sdpAnswer === undefined) 
+			handleSdpAnswer();
+		// if (socket._callbacks.$icecandidate === undefined) 
+			handleIceCandidate();
+		// if (socket._callbacks.$leavePrivateChat === undefined) 
+			handleCloseCall();
 
 		// Webcam
 		handleLocalWebcamView();
 		handleRemoteWebcamView();
+
+		return function cleanup() {
+			// remove the socket.on event listeners
+			socket.off("rtcPermissionAnswer");
+			socket.off("sdpOffer");
+			socket.off("sdpAnswer");
+			socket.off("icecandidate");
+			socket.off("leavePrivateChat");
+
+			console.log("private chat useeffect cleanup", socket._callbacks);
+
+			// this is copilot => is this needed.
+			// videoLocal.current?.remove();
+			// videoRemote.current?.remove();
+		}
 
 	}, []);
 
