@@ -48,7 +48,7 @@ class RtcConnection {
 
     // datachannelfuntions
     sendMessageThroughDataChannel(msg : string) {
-        console.log("sendMessageThroughDataChannel", this.textChannel);
+        console.log("this.textChannel", this.textChannel);
         this.textChannel?.send(msg);
     }
     onReadAsDataURL(event : ProgressEvent<FileReader> | null, text : any) {
@@ -91,16 +91,16 @@ class RtcConnection {
             fileMessage.data = text;
             // data.last = true;
         }
-    
+
         // using JSON.stringify for chrome!
         // console.log("sending : ", JSON.stringify(fileMessage));
         this.dataChannel?.send(JSON.stringify(fileMessage));
-    
+
         var remainingDataURL = text.slice(fileMessage.data.length);
         if (remainingDataURL.length) {
             setTimeout(() => {
                 this.onReadAsDataURL(null, remainingDataURL); // continue transmitting
-            }, 500) 
+            }, 500)
         } else {
             this.dataChannel.send('fileSent');
         }
@@ -157,7 +157,7 @@ class RtcConnection {
         // check if the other party is willing to send a file
         if (event.data == 'FileIncoming') {
             this.waitingForFileSize = true;
-            return; 
+            return;
         }
 
         // if we are waiting for the filesize, we have to check if the message is a number
@@ -196,7 +196,6 @@ class RtcConnection {
                     this.onLocalStreamSet(this.localStream);
                 }
             }
-    
             if (this.localStream) {
                 this.localStream.getTracks().forEach((track) => {
                     if (this.localStream) {
@@ -204,7 +203,6 @@ class RtcConnection {
                     }
                 })
             }
-    
             this.pc.ontrack = (event) => {
                 console.log("pc ontrack")
                 event.streams[0].getTracks().forEach((track) => {
@@ -251,6 +249,8 @@ class RtcConnection {
                         this.receiveThroughDataChannel(event);
                     };
                 } else if (event.channel.label === "textchannel") {
+                    console.log("event", event);
+
                     this.textChannel = event.channel;
                     this.textChannel.onmessage = (event :  MessageEvent<any>) => {
                         this.onGetMessage(event.data);
